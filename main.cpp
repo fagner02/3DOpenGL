@@ -15,14 +15,9 @@
 #include "./include/GLFW/glfw3.h"
 #include "./vertex_array.h"
 #include "./sphere.h"
-
+#include "./cube.h"
 
 using namespace std;
-
-Vetor3D posEsfera = Vetor3D(2,1,0);
-float raioEsfera = 0.2;
-float vz = -2;
-float vy = -0.5;
 
 void desenha(Shader* shader) {
 
@@ -69,59 +64,6 @@ const float vao_col[]=
      0.0f,0.0f,1.0f,
      0.0f,0.0f,0.0f,
     };
-
-    glDisable(GL_CULL_FACE);
-    glGenVertexArrays(4,vao);
-    glGenBuffers(4, vbo);
-    
-    glBindVertexArray(vao[0]);
-        glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
-        glBufferData(GL_ARRAY_BUFFER,sizeof(vao_pos),vao_pos,GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,0);
-
-        glBindBuffer(GL_ARRAY_BUFFER,vbo[1]);
-        glBufferData(GL_ARRAY_BUFFER,sizeof(vao_col),vao_col,GL_STATIC_DRAW);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,0,0);
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-    glBindVertexArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // glutSwapBuffers();
-
-    // glClearColor(0, 0, 0, 1);
-    // glClear(GL_COLOR_BUFFER_BIT);
-    // glUseProgram(shaderProgram);
-    shader->useShader();
-    glm::mat4 model = glm::mat4(1.0);
-    glm::mat4 view = glm::mat4(1.0);
-    glm::mat4 proj = glm::mat4(1.0);
-
-    proj = glm::perspective(glm::radians(5.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-    view = glm::translate(view, glm::vec3(0.0, vy, vz));
-
-    int modelLoc = glGetUniformLocation(shader->shaderProgram, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-
-    int projLoc = glGetUniformLocation(shader->shaderProgram, "proj");
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-
-    int viewLoc = glGetUniformLocation(shader->shaderProgram, "view");
-    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-    glBindVertexArray(vao[0]);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    shader->deleteShader();
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    glBindVertexArray(0);
-
-    // glDeleteVertexArrays(4,vao);
-    // glDeleteBuffers(4, vbo);
     
     //  GLuint vbo[4] = { -1,-1,-1,-1 };
     // GLuint vao[4] = { -1,-1,-1,-1 };
@@ -267,6 +209,7 @@ const float vao_col[]=
 
 double width, height;
 bool down = false;
+bool follow_cursor = false;
 bool right_pressed = false;
 glm::mat4 view = glm::mat4(1.0);
 glm::vec3 position (0.0f, 0.0f, 2.0f);
@@ -297,16 +240,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (down) {
-        orientation = glm::rotate(orientation, glm::radians((float)(-(xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
+    if (down || follow_cursor) {
+        orientation = glm::rotate(orientation, glm::radians((float)((xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
         orientation = glm::rotate(orientation, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(1.0f, 0.0f, 0.0f));
         view = glm::lookAt(position, position + orientation, up);
         mousePos.x = xpos;
         mousePos.y = ypos;
     }
     if (right_pressed) {
-        position = glm::rotate(position, glm::radians((float)(-(xpos - mousePos.x))), glm::normalize(orientation));
-        position = glm::rotate(position, glm::radians((float)(-(ypos - mousePos.y))), glm::normalize(orientation));
+        position = glm::rotate(position, glm::radians((float)(-(xpos - mousePos.x))), glm::vec3(0.0f, 0.0f, 1.0f));
+        position = glm::rotate(position, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(0.0f, 0.0f, 0.0f));
         view = glm::lookAt(position, position + orientation, up);
         mousePos.x = xpos;
         mousePos.y = ypos;
@@ -336,6 +279,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_MINUS) {
         position -= 0.1f *glm::normalize(orientation);
     }
+    if (key == GLFW_KEY_M && action == GLFW_PRESS) {
+        follow_cursor = !follow_cursor;
+        cout << "wcrklm";
+    }
     view = glm::lookAt(position, position + orientation, up);
 }
 
@@ -362,7 +309,6 @@ int main() {
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
-    glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
     Shader shader("./shaders/vertex_shader.glsl", "./shaders/frag.glsl");
@@ -383,7 +329,11 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
     Sphere sphere(0.5);
-    
+    Cube cube(glm::vec3(0.0, 0.2, -0.5));
+
+    int lightPosLoc = glGetUniformLocation(shader.shaderProgram, "lightPos");
+    glUniform3fv(lightPosLoc, 1, glm::value_ptr(cube.pos));
+
     VertexArray vao = VertexArray({
         //   x      y     z
             -0.5, -0.5, -0.5,
@@ -426,45 +376,13 @@ int main() {
         int viewLoc = glGetUniformLocation(shader.shaderProgram, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        sphere.bindVAO();
-        glDrawElements(GL_TRIANGLES, sphere.bufferCount, GL_UNSIGNED_INT, 0);
+        // sphere.bindVAO();
+        // glDrawElements(GL_LINES, sphere.bufferCount, GL_UNSIGNED_INT, 0);
+
+        cube.bindVAO();
+        glDrawElements(GL_TRIANGLES, cube.bufferCount, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwWaitEvents();
     }
-
-    // glutCreateWindow("wTitle");
-
-    // glClearColor(0.6,0.6,0.0,1.0); //define a cor para limpar a imagem (cor de fundo)
-    // //glClearColor(1.0,1.0,1.0,1.0); //define a cor para limpar a imagem (cor de fundo)
-
-    // glEnable(GL_LIGHTING); //habilita iluminacao (chamada no setLight)
-    // //glEnable(GL_COLOR_MATERIAL);
-    // glEnable(GL_CULL_FACE); //nao mostra as faces dos dois "lados" (frente [anti-horaria] e tras [horaria])
-    // //glCullFace(GL_BACK); //define qual "lado" da face nao sera mostrado (padrao = nao mostrar a de tras)
-    // glEnable(GL_NORMALIZE); //mantem a qualidade da iluminacao mesmo quando glScalef eh usada
-
-    // glShadeModel(GL_SMOOTH);
-    // //glShadeModel(GL_FLAT);
-
-    // glEnable( GL_LINE_SMOOTH );
-    // //glLineWidth( 1.0 );
-    // //glEnable( GL_POLYGON_SMOOTH ); //tem que modificar a maneira de fazer o blend ( GL_BLEND e GL_ALPHA )
-
-    // glEnable(GL_DEPTH_TEST);
-    // //glDepthFunc(GL_LESS);
-
-    // glEnable(GL_BLEND); //habilita a transparencia
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    
-
-    // // glutReshapeFunc(glutGUI::resize);
-    // glutDisplayFunc(desenha);
-    // glutKeyboardFunc(teclado);
-    // // glutIdleFunc(glutGUI::idle);
-    // // glutMouseFunc(mouseButton);
-    // // glutMotionFunc(glutGUI::mouseMove);
-    // glutEntryFunc(setShader);
-    // glutMainLoop();
 }
