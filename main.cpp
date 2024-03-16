@@ -376,8 +376,8 @@ int main() {
         int viewLoc = glGetUniformLocation(shader.shaderProgram, "view");
         glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
-        // sphere.bindVAO();
-        // glDrawElements(GL_LINES, sphere.bufferCount, GL_UNSIGNED_INT, 0);
+        sphere.bindVAO();
+        glDrawElements(GL_LINES, sphere.bufferCount, GL_UNSIGNED_INT, 0);
 
         cube.bindVAO();
         glDrawElements(GL_TRIANGLES, cube.bufferCount, GL_UNSIGNED_INT, 0);

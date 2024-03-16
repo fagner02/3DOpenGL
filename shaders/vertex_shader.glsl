@@ -11,7 +11,6 @@ uniform mat4 model;
 uniform mat4 proj;
 uniform mat4 view;
 
-
 void main(){
     vec3 transformedPos = vec3(model * vec4(aPos, 1.0));
     gl_Position = proj * view * vec4(transformedPos, 1.0);

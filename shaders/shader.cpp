@@ -2,6 +2,21 @@
 
 Shader::Shader(){}
 
+void errorLog(int shader) {
+    int status, length;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
+    if (status == GL_TRUE) {
+        return;
+    }
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
+
+    int writtenChars = 0;
+    char* log = new char [length];
+    glGetShaderInfoLog(shader, length, &writtenChars, log);
+
+    std::cout << log << "\n";
+    free(log);
+}
 Shader::Shader(char* vertex_filename, char* frag_filename) {
     std::ifstream file(vertex_filename, std::ifstream::binary);
 
@@ -34,20 +49,6 @@ Shader::Shader(char* vertex_filename, char* frag_filename) {
     glCompileShader(vertexShader);
     glCompileShader(fragShader);
 
-    int fragC, vertexC, fragL, vertexL;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertexC);
-    glGetShaderiv(fragShader, GL_COMPILE_STATUS, &fragC);
-
-    glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &vertexL);
-    glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &fragL);
-
-    
-    int writtenChars = 0;
-    char* log = new char [vertexL];
-    glGetShaderInfoLog(vertexShader, vertexL, &writtenChars, log);
-    std::cout << log << "\n";
-    free(log);
-
     shaderProgram = glCreateProgram();
 
     glAttachShader(shaderProgram, vertexShader);
@@ -55,6 +56,8 @@ Shader::Shader(char* vertex_filename, char* frag_filename) {
 
     glLinkProgram(shaderProgram);
 
+    errorLog(fragShader);
+    errorLog(vertexShader);
     glDeleteShader(vertexShader);
     glDeleteShader(fragShader);
 }
