@@ -1,0 +1,2 @@
+g++ -std=c++17 -w -Wl,--enable-stdcall-fixup -L./lib -I./include main.cpp sphere.cpp shaders/shader.cpp vertex_array.cpp bib/Camera.cpp bib/CameraDistante.cpp bib/CameraJogo.cpp bib/Desenha.cpp bib/model3ds.cpp bib/Vetor3D.cpp gui_glut/extra.cpp gui_glut/gui.cpp gui_glut/OpenTextures.cpp -o main glut32.dll glu32.dll -lopengl32 lib3ds-1.3.dll SDL2.dll -lDevIL -lglext -lglfw3dll
+main
