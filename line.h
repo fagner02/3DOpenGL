@@ -9,5 +9,5 @@
 
 class Line : public VertexArray {
 public:
-    Line(glm::vec3 pos1, glm::vec3 pos2);
+    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color = glm::vec3(1.0f));
 };

@@ -7,10 +7,10 @@
 #include "./include/glm/gtx/rotate_vector.hpp"
 #include "vertex_array.h"
 
-class Sphere : public VertexArray
-{
+class Sphere : public VertexArray {
 private:
+    glm::vec3 calcPoint(int i, int j, double& z_step, double& step, double& h, double& diameter, int& sign1, int& sign2);
     glm::vec3 normalize(glm::vec3 a, glm::vec3 b, double length);
 public:
-    Sphere(double radius, int steps = 40);
+    Sphere(double radius, int steps = 5);
 };

@@ -428,7 +428,7 @@ int main() {
         glm::vec3(0.35, 0.35, 0.35)
     };
     // glm::vec3 aa(-0.35, 0.35, 0.35);
-    glm::vec3 n = glm::cross(points[0] - points[1], points[2] - points[1]);
+    glm::vec3 n = glm::cross(points[2] - points[1], points[0] - points[1]);
     std::cout << "out: " << n.x << " " << n.y << " " << n.z << "\n";
     // n.y *= -1;
     vector<float> lineV;
@@ -455,10 +455,8 @@ int main() {
         }
         );
     Line line(glm::vec3(0), n);
-    Line line1(points[0], points[1]);
-    Line line2(points[2], points[1]);
-    Point point(points[0] - points[1]);
-    Point point2(points[2] - points[1]);
+    Line line1(points[0], points[1], glm::vec3(0.8, 0.5, 0.5));
+    Line line2(points[2], points[1], glm::vec3(0.0, 0.8, 0.0));
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.5, 0.2, 0.3, 1);
@@ -470,10 +468,12 @@ int main() {
 
         // cube2.bindVAO();
         // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
+        sphere.bindVAO();
+        glDrawArrays(GL_LINES, 0, sphere.bufferCount);
         // vao.bindVAO();
         // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
-        // frontFace.bindVAO();
-        // glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
+        frontFace.bindVAO();
+        glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
 
         lightless.useShader();
         matrix(lightless.shaderProgram);
@@ -484,10 +484,6 @@ int main() {
         glDrawArrays(GL_LINES, 0, line1.bufferCount);
         line2.bindVAO();
         glDrawArrays(GL_LINES, 0, line2.bufferCount);
-        point.bindVAO();
-        glDrawArrays(GL_POINTS, 0, point.bufferCount);
-        point2.bindVAO();
-        glDrawArrays(GL_POINTS, 0, point2.bufferCount);
 
         lightShader.useShader();
         matrix(lightShader.shaderProgram);
