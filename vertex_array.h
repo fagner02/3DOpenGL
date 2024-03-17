@@ -6,7 +6,7 @@
 
 class VertexArray {
 protected:
-    void defaultLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals);
+    void defaultLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals = std::vector<float>());
     void indexLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes);
 private:
     void bindAttrib(std::vector<float> buffer, int index);
@@ -14,8 +14,10 @@ private:
     unsigned int vao, vbo[3], ebo;
 public:
     unsigned int bufferCount;
+    VertexArray(std::vector<float> coordinates, std::vector<float> colors);
     VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals);
     VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes);
+    VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<unsigned int> indexes);
     VertexArray();
     void bindVAO();
     void enableAttribs();

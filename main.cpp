@@ -16,12 +16,14 @@
 #include "./vertex_array.h"
 #include "./sphere.h"
 #include "./cube.h"
+#include "point.h"
+#include "line.h"
 
 using namespace std;
 
 void desenha(Shader* shader) {
 
-    GUI::setLight(0, 0,2,0, true,false);
+    GUI::setLight(0, 0, 2, 0, true, false);
 
     // // //referencia
     // GUI::drawOrigin(0.5);
@@ -40,31 +42,31 @@ void desenha(Shader* shader) {
     GLuint vbo[4] = { -1,-1,-1,-1 };
     GLuint vao[4] = { -1,-1,-1,-1 };
 
-  
+
 
     const float vao_pos[] =
     {
-//   x      y     z
-    -0.5, -0.5, -0.5,
-    0, 0.5, 0,
-    0.5,-0.5,-0.5,
+        //   x      y     z
+            -0.5, -0.5, -0.5,
+            0, 0.5, 0,
+            0.5,-0.5,-0.5,
 
-    0.5, -0.5, -0.5,
-    0, 0.5, 0,
-    0.5, -0.5, 0.5,
+            0.5, -0.5, -0.5,
+            0, 0.5, 0,
+            0.5, -0.5, 0.5,
 
-    0.5, 0.5, 0.0f,
-    0.5, -0.5, 0,
+            0.5, 0.5, 0.0f,
+            0.5, -0.5, 0,
     };
-const float vao_col[]=
+    const float vao_col[] =
     {
-//      r   g    b
-     1.0f,0.0f,0.0f,
-     0.0f,1.0f,0.0f,
-     0.0f,0.0f,1.0f,
-     0.0f,0.0f,0.0f,
+        //      r   g    b
+             1.0f,0.0f,0.0f,
+             0.0f,1.0f,0.0f,
+             0.0f,0.0f,1.0f,
+             0.0f,0.0f,0.0f,
     };
-    
+
     //  GLuint vbo[4] = { -1,-1,-1,-1 };
     // GLuint vao[4] = { -1,-1,-1,-1 };
 
@@ -91,7 +93,7 @@ const float vao_col[]=
 //     {
 //         // cout << vao[i] << " ";
 //     }
-    
+
 //     glBindVertexArray(vao[0]);
 //         glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
 //         glBufferData(GL_ARRAY_BUFFER,sizeof(vao_pos1),vao_pos1,GL_STATIC_DRAW);
@@ -114,8 +116,8 @@ const float vao_col[]=
 //     glDrawArrays(GL_TRIANGLES,0,4);
 //     glBindVertexArray(0);
 
-    glDeleteVertexArrays(4,vao);
-    glDeleteBuffers(4,vbo);
+    glDeleteVertexArrays(4, vao);
+    glDeleteBuffers(4, vbo);
     //frontal
     // glBegin(GL_POLYGON);
     //     glNormal3f(0,0,1);
@@ -185,16 +187,16 @@ const float vao_col[]=
     //     glVertex3f(1, 1, 1);
     //     glVertex3f(1, 1, 0);
     //     glVertex3f(0.5, 1.5, 0.5);
-        
+
     // glEnd();
-    
+
     // glBegin(GL_POLYGON);
     //     glNormal3f(n1.x, n1.y, n1.z);
     //     glVertex3f(0,1,1);
     //     glVertex3f(1,1,1);
     //     glVertex3f(0.5,1.5,0.5);
     // glEnd();
-    
+
 
     // //interacao com o mouse
     // posEsfera.x += glutGUI::drx;
@@ -212,7 +214,7 @@ bool down = false;
 bool follow_cursor = false;
 bool right_pressed = false;
 glm::mat4 view = glm::mat4(1.0);
-glm::vec3 position (0.0f, 0.0f, 2.0f);
+glm::vec3 position(0.0f, 0.0f, 2.0f);
 glm::vec3 orientation(0.0f, 0.0f, -1.0f);
 glm::vec3 up(0.0f, 1.0f, 0.0f);
 
@@ -248,8 +250,8 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
         mousePos.y = ypos;
     }
     if (right_pressed) {
-        position = glm::rotate(position, glm::radians((float)(-(xpos - mousePos.x))), glm::vec3(0.0f, 0.0f, 1.0f));
-        position = glm::rotate(position, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(0.0f, 0.0f, 0.0f));
+        position = glm::rotate(position, glm::radians((float)(-(xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
+        position = glm::rotate(position, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(1.0f, 0.0f, 0.0f));
         view = glm::lookAt(position, position + orientation, up);
         mousePos.x = xpos;
         mousePos.y = ypos;
@@ -265,29 +267,42 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         position += 0.1f * glm::normalize(glm::cross(orientation, up));
     }
     if (key == GLFW_KEY_RIGHT) {
-        position -= 0.1f *glm::normalize(glm::cross(orientation, up));
+        position -= 0.1f * glm::normalize(glm::cross(orientation, up));
     }
     if (key == GLFW_KEY_DOWN) {
-        position -= 0.1f *glm::normalize(glm::cross(glm::cross(orientation, up), orientation));
+        position -= 0.1f * glm::normalize(glm::cross(glm::cross(orientation, up), orientation));
     }
     if (key == GLFW_KEY_UP) {
-        position += 0.1f *glm::normalize(glm::cross(glm::cross(orientation, up), orientation));
+        position += 0.1f * glm::normalize(glm::cross(glm::cross(orientation, up), orientation));
     }
     if (key == GLFW_KEY_EQUAL) {
-        position += 0.1f *glm::normalize(orientation);
+        position += 0.1f * glm::normalize(orientation);
     }
     if (key == GLFW_KEY_MINUS) {
-        position -= 0.1f *glm::normalize(orientation);
+        position -= 0.1f * glm::normalize(orientation);
     }
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         follow_cursor = !follow_cursor;
-        cout << "wcrklm";
     }
     view = glm::lookAt(position, position + orientation, up);
 }
 
 static void error_callback(int error, const char* description) {
     fprintf(stderr, "Error: %s\n", description);
+}
+
+glm::mat4 model = glm::mat4(1.0);
+glm::mat4 proj = glm::mat4(1.0);
+
+void matrix(int program) {
+    int modelLoc = glGetUniformLocation(program, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    int projLoc = glGetUniformLocation(program, "proj");
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+    int viewLoc = glGetUniformLocation(program, "view");
+    glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 }
 
 int main() {
@@ -298,7 +313,7 @@ int main() {
         return -1;
     }
     glfwSetErrorCallback(error_callback);
-    glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
     GLFWwindow* window = glfwCreateWindow(width, height, "Opengl Graphics", nullptr, nullptr);
     if (window == NULL) {
         cout << "erro";
@@ -309,16 +324,16 @@ int main() {
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
 
+    glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+    Shader lightless("./shaders/lightless.vert", "./shaders/lightless.frag");
+    Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
     Shader shader("./shaders/vertex_shader.glsl", "./shaders/frag.glsl");
-    
-    glm::mat4 model = glm::mat4(1.0);
-    glm::mat4 proj = glm::mat4(1.0);
 
     proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
     view = glm::lookAt(position, position + orientation, up);
-    
+    shader.useShader();
     int modelLoc = glGetUniformLocation(shader.shaderProgram, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
@@ -328,57 +343,154 @@ int main() {
     int viewLoc = glGetUniformLocation(shader.shaderProgram, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
+    glm::vec3 lightPos(0.5, 0.5, 0.5);
     Sphere sphere(0.5);
-    Cube cube(glm::vec3(0.0, 0.2, -0.5));
+    Cube cube2(glm::vec3(0.0, 0.0, 0.0), 0.7);
 
     int lightPosLoc = glGetUniformLocation(shader.shaderProgram, "lightPos");
-    glUniform3fv(lightPosLoc, 1, glm::value_ptr(cube.pos));
+    glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
+
+    lightShader.useShader();
+    Cube cube(lightPos, 0.05);
+    int lightmodelLoc = glGetUniformLocation(lightShader.shaderProgram, "model");
+    glUniformMatrix4fv(lightmodelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
+    int lightprojLoc = glGetUniformLocation(lightShader.shaderProgram, "proj");
+    glUniformMatrix4fv(lightprojLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+    int lightviewLoc = glGetUniformLocation(lightShader.shaderProgram, "view");
+    glUniformMatrix4fv(lightviewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
     VertexArray vao = VertexArray({
-        //   x      y     z
-            -0.5, -0.5, -0.5,
-            0, 0.5, 0,
-            0.5,-0.5,-0.5,
-
-            0.5, -0.5, -0.5,
-            0, 0.5, 0,
-            0.5, -0.5, 0.5
+            -0.5f,	0.0f,	0.5f,
+            -0.5f,	0.0f,	-0.5f,
+            0.5f,	0.0f,	-0.5f,
+            0.5f,	0.0f,	0.5f,
+            -0.5f,	0.0f,	0.5f,
+            -0.5f,	0.0f,	-0.5f,
+            0.0f,	0.8f,	0.0f,
+            -0.5f,	0.0f,	-0.5f,
+            0.5f,	0.0f,	-0.5f,
+            0.0f,	0.8f,	0.0f,
+            0.5f,	0.0f,	-0.5f,
+            0.5f,	0.0f,	0.5f,
+            0.0f,	0.8f,	0.0f,
+            0.5f,	0.0f,	0.5f,
+            -0.5f,	0.0f,	0.5f,
+            0.0f,	0.8f,	0.0f,
         }, {
-            //      r   g    b
-                 1.0f,0.0f,0.0f,
-                 0.0f,1.0f,0.0f,
-                 0.0f,0.0f,1.0f,
-                 0.0f,0.0f,0.0f,
-                 0.0f,0.0f,1.0f,
-                 0.0f,0.0f,0.0f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.92f,	0.86f,	0.76f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.92f,	0.86f,	0.76f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.92f,	0.86f,	0.76f,
+            0.83f,	0.70f,	0.44f,
+            0.83f,	0.70f,	0.44f,
+            0.92f,	0.86f,	0.76f,
         }, {
-            //      r   g    b
-                 1.0f,0.0f,0.0f,
-                 0.0f,1.0f,0.0f,
-                 0.0f,0.0f,1.0f,
-                 0.0f,0.0f,0.0f,
-                 0.0f,0.0f,1.0f,
-                 0.0f,0.0f,0.0f,
+            0.0f,	-1.0f,	0.0f,
+            0.0f,	-1.0f,	0.0f,
+            0.0f,	-1.0f,	0.0f,
+            0.0f,	-1.0f,	0.0f,
+            -0.8f,	0.5f,	0.0f,
+            -0.8f,	0.5f,	0.0f,
+            -0.8f,	0.5f,	0.0f,
+            0.0f,	0.5f,	-0.8f,
+            0.0f,	0.5f,	-0.8f,
+            0.0f,	0.5f,	-0.8f,
+            0.8f,	0.5f,	0.0f,
+            0.8f,	0.5f,	0.0f,
+            0.8f,	0.5f,	0.0f,
+            0.0f,	0.5f,	0.8f,
+            0.0f,	0.5f,	0.8f,
+            0.0f,	0.5f,	0.8f
+        }, {
+            0, 1, 2, // Bottom side
+            0, 2, 3, // Bottom side
+            4, 6, 5, // Left side
+            7, 9, 8, // Non-facing side
+            10, 12, 11, // Right side
+            13, 15, 14 // Facing side
         });
+
+    glm::vec3 points[] = {
+         glm::vec3(-0.35, 0.35, -0.35),
+        glm::vec3(-0.35, 0.35, 0.35),
+       glm::vec3(0.35, 0.35, -0.35),
+        glm::vec3(0.35, 0.35, 0.35)
+    };
+    // glm::vec3 aa(-0.35, 0.35, 0.35);
+    glm::vec3 n = glm::cross(points[0] - points[1], points[2] - points[1]);
+    std::cout << "out: " << n.x << " " << n.y << " " << n.z << "\n";
+    // n.y *= -1;
+    vector<float> lineV;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0;j < 3;j++) {
+            lineV.push_back(points[i][j]);
+        }
+    }
+    VertexArray frontFace(
+        lineV, {
+            0.8,0.2,0.5,
+            0.8,0.2,0.5,
+            0.8,0.2,0.5,
+            0.8,0.2,0.5,
+        }, {
+            n.x, n.y, n.z,
+            n.x, n.y, n.z,
+            n.x, n.y, n.z,
+            n.x, n.y, n.z,
+        },
+        {
+            0, 1, 2,
+            1, 2, 3
+        }
+        );
+    Line line(glm::vec3(0), n);
+    Line line1(points[0], points[1]);
+    Line line2(points[2], points[1]);
+    Point point(points[0] - points[1]);
+    Point point2(points[2] - points[1]);
 
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.5, 0.2, 0.3, 1);
-        glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
-    
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         shader.useShader();
-        
-        int modelLoc = glGetUniformLocation(shader.shaderProgram, "model");
-        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
 
-        int projLoc = glGetUniformLocation(shader.shaderProgram, "proj");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+        matrix(shader.shaderProgram);
 
-        int viewLoc = glGetUniformLocation(shader.shaderProgram, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+        // cube2.bindVAO();
+        // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
+        // vao.bindVAO();
+        // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
+        // frontFace.bindVAO();
+        // glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
 
-        sphere.bindVAO();
-        glDrawElements(GL_LINES, sphere.bufferCount, GL_UNSIGNED_INT, 0);
+        lightless.useShader();
+        matrix(lightless.shaderProgram);
 
+        line.bindVAO();
+        glDrawArrays(GL_LINES, 0, line.bufferCount);
+        line1.bindVAO();
+        glDrawArrays(GL_LINES, 0, line1.bufferCount);
+        line2.bindVAO();
+        glDrawArrays(GL_LINES, 0, line2.bufferCount);
+        point.bindVAO();
+        glDrawArrays(GL_POINTS, 0, point.bufferCount);
+        point2.bindVAO();
+        glDrawArrays(GL_POINTS, 0, point2.bufferCount);
+
+        lightShader.useShader();
+        matrix(lightShader.shaderProgram);
         cube.bindVAO();
         glDrawElements(GL_TRIANGLES, cube.bufferCount, GL_UNSIGNED_INT, 0);
 

@@ -11,13 +11,13 @@ void VertexArray::bindAttrib(std::vector<float> buffer, int index) {
 }
 
 void VertexArray::initialize(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals) {
-    glGenVertexArrays(1,&vao);
-    glGenBuffers(3, vbo);
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(normals.size() == 0 ? 2 : 3, vbo);
     glBindVertexArray(vao);
 
     this->bindAttrib(coordinates, 0);
     this->bindAttrib(colors, 1);
-    this->bindAttrib(normals, 2);
+    if (normals.size() > 0)this->bindAttrib(normals, 2);
 }
 
 void VertexArray::defaultLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals) {
@@ -33,12 +33,20 @@ void VertexArray::indexLateConstructor(std::vector<float> coordinates, std::vect
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexes.size() * sizeof(unsigned int), indexes.data(), GL_DYNAMIC_DRAW);
 }
 
+VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors) {
+    defaultLateConstructor(coordinates, colors);
+}
+
 VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals) {
     defaultLateConstructor(coordinates, colors, normals);
 }
 
 VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes) {
     indexLateConstructor(coordinates, colors, normals, indexes);
+}
+
+VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<unsigned int> indexes) {
+    indexLateConstructor(coordinates, colors, std::vector<float>(), indexes);
 }
 
 void VertexArray::enableAttribs() {
