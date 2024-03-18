@@ -9,8 +9,8 @@
 
 class Sphere : public VertexArray {
 private:
-    glm::vec3 calcPoint(int i, int j, double& z_step, double& step, double& h, double& diameter, int& sign1, int& sign2);
+    glm::vec3 calcPoint(int i, int j, double& z_step, double& step, double& h, double& diameter, int& sign1, int& sign2, bool flip);
     glm::vec3 normalize(glm::vec3 a, glm::vec3 b, double length);
 public:
-    Sphere(double radius, int steps = 5);
+    Sphere(double radius, int steps = 5, glm::vec3 color = glm::vec3(0.8));
 };

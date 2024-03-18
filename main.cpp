@@ -469,7 +469,7 @@ int main() {
         // cube2.bindVAO();
         // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
         sphere.bindVAO();
-        glDrawArrays(GL_LINES, 0, sphere.bufferCount);
+        glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
         // vao.bindVAO();
         // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
         frontFace.bindVAO();
