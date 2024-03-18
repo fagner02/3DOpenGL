@@ -17,11 +17,10 @@ glm::vec3 Sphere::calcPoint(int i, int j, double& z_step, double& step, double& 
     return normalize(glm::vec3(0.0f), glm::vec3(flip ? z : x, y * sign2, flip ? x : z), diameter);
 }
 
-Sphere::Sphere(double radius, int steps, glm::vec3 color) : VertexArray() {
+Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : VertexArray() {
     glm::vec3 center(0.0, 0.0, 0.0);
     double h = sqrt((radius * radius) * 2.0);
     double diameter = 2 * radius;
-    double angle = glm::radians(45.0f);
     double stepCount = steps;
     double step = diameter / stepCount;
     double z_step = h / stepCount;
@@ -47,7 +46,8 @@ Sphere::Sphere(double radius, int steps, glm::vec3 color) : VertexArray() {
                         calcPoint(indexi + 1, (indexj + 1) - (start), z_step, step, h, diameter, sign[k], sign[o],f),
                         calcPoint(indexi, (indexj + 1) - start, z_step, step, h, diameter, sign[k], sign[o],f) };
 
-                        glm::vec3 normal = glm::cross((points[0] - points[1]), (points[2] - points[1]));
+                        glm::vec3 normal = abs(glm::cross((points[0] - points[1]), (points[2] - points[1])));
+
                         for (int p = 0; p < 3;p++) {
                             for (int n = 0;n < 3;n++) {
                                 vertices.push_back(points[p][n]);
@@ -56,9 +56,8 @@ Sphere::Sphere(double radius, int steps, glm::vec3 color) : VertexArray() {
                             }
                         }
 
-                        normal = glm::cross((points[1] - points[2]), (points[3] - points[2]));
-
-                        int indexs[3] = { 0,2,3 };
+                        normal = glm::abs(glm::cross((points[1] - points[2]), (points[3] - points[2])));
+                        int indexs[3] = { 0,2, 3 };
                         for (int p = 0; p < 3;p++) {
                             for (int n = 0;n < 3;n++) {
                                 vertices.push_back(points[indexs[p]][n]);
@@ -74,7 +73,7 @@ Sphere::Sphere(double radius, int steps, glm::vec3 color) : VertexArray() {
                         calcPoint(indexi + 1, (indexj + 1) - (start), z_step, step, h, diameter, sign[k], sign[o], f)
                     };
 
-                    glm::vec3 normal = glm::cross((points[0] - points[1]), (points[2] - points[1]));
+                    glm::vec3 normal = glm::abs(glm::cross((points[0] - points[1]), (points[2] - points[1])));
                     for (int p = 0; p < 3;p++) {
                         for (int n = 0;n < 3;n++) {
                             vertices.push_back(points[p][n]);
