@@ -10,6 +10,5 @@
 class Cube : public VertexArray {
 public:
     glm::vec3 pos;
-    glm::mat4 modelMatrix;
     Cube(glm::vec3 pos, float size = 0.1);
 };

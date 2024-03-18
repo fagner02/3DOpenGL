@@ -60,3 +60,7 @@ void VertexArray::bindVAO() {
     enableAttribs();
 }
 
+void VertexArray::applyMatrix(int shaderProgram) {
+    int modelLoc = glGetUniformLocation(shaderProgram, "model");
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+}
