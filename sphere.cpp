@@ -41,13 +41,15 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
                 int start = 0;
                 for (int i = 1; i <= stepCount; i++) {
                     for (int j = 0; j < (count / 2); j++) {
-                        glm::vec3 points[4] = { calcPoint(indexi, indexj - start, z_step, step, h, diameter, sign[k], sign[o], f),
-                        calcPoint(indexi + 1, (indexj)-(start), z_step, step, h, diameter, sign[k], sign[o], f),
-                        calcPoint(indexi + 1, (indexj + 1) - (start), z_step, step, h, diameter, sign[k], sign[o],f),
-                        calcPoint(indexi, (indexj + 1) - start, z_step, step, h, diameter, sign[k], sign[o],f) };
+                        glm::vec3 points[4] = { calcPoint(indexi, indexj - start, z_step, step, h, diameter, sign[k], sign[o], f) + pos,
+                        calcPoint(indexi + 1, (indexj)-(start), z_step, step, h, diameter, sign[k], sign[o], f) + pos,
+                        calcPoint(indexi + 1, (indexj + 1) - (start), z_step, step, h, diameter, sign[k], sign[o],f) + pos,
+                        calcPoint(indexi, (indexj + 1) - start, z_step, step, h, diameter, sign[k], sign[o],f) + pos };
 
-                        glm::vec3 normal = abs(glm::cross((points[0] - points[1]), (points[2] - points[1])));
-
+                        glm::vec3 normal = glm::cross((points[1] - points[0]), (points[2] - points[0]));
+                        if (glm::dot(normal, pos - points[1]) >= 0) {
+                            normal *= -1;
+                        }
                         for (int p = 0; p < 3;p++) {
                             for (int n = 0;n < 3;n++) {
                                 vertices.push_back(points[p][n]);
@@ -56,8 +58,11 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
                             }
                         }
 
-                        normal = glm::abs(glm::cross((points[1] - points[2]), (points[3] - points[2])));
-                        int indexs[3] = { 0,2, 3 };
+                        normal = (glm::cross((points[2] - points[0]), (points[3] - points[0])));
+                        if (glm::dot(normal, pos - points[1]) >= 0) {
+                            normal *= -1;
+                        }
+                        int indexs[3] = { 3,0, 2 };
                         for (int p = 0; p < 3;p++) {
                             for (int n = 0;n < 3;n++) {
                                 vertices.push_back(points[indexs[p]][n]);
@@ -68,12 +73,15 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
 
                         indexj++;
                     }
-                    glm::vec3 points[3] = { calcPoint(indexi, indexj - start, z_step, step, h, diameter, sign[k], sign[o], f),
-                        calcPoint(indexi + 1, (indexj)-(start), z_step, step, h, diameter, sign[k], sign[o], f),
-                        calcPoint(indexi + 1, (indexj + 1) - (start), z_step, step, h, diameter, sign[k], sign[o], f)
+                    glm::vec3 points[3] = { calcPoint(indexi, indexj - start, z_step, step, h, diameter, sign[k], sign[o], f) + pos,
+                        calcPoint(indexi + 1, (indexj)-(start), z_step, step, h, diameter, sign[k], sign[o], f) + pos,
+                        calcPoint(indexi + 1, (indexj + 1) - (start), z_step, step, h, diameter, sign[k], sign[o], f) + pos
                     };
 
-                    glm::vec3 normal = glm::abs(glm::cross((points[0] - points[1]), (points[2] - points[1])));
+                    glm::vec3 normal = (glm::cross((points[1] - points[0]), (points[2] - points[0])));
+                    if (glm::dot(normal, pos - points[1]) >= 0) {
+                        normal *= -1;
+                    }
                     for (int p = 0; p < 3;p++) {
                         for (int n = 0;n < 3;n++) {
                             vertices.push_back(points[p][n]);

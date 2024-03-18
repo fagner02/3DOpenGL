@@ -344,7 +344,7 @@ int main() {
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 
     glm::vec3 lightPos(0.5, 0.5, 0.5);
-    Sphere sphere(0.5, 3);
+    Sphere sphere(0.5, glm::vec3(0.0, 0.0, -0.3));
     Cube cube2(glm::vec3(0.0, 0.0, 0.0), 0.7);
 
     int lightPosLoc = glGetUniformLocation(shader.shaderProgram, "lightPos");

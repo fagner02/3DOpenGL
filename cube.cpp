@@ -25,15 +25,14 @@ Cube::Cube(glm::vec3 pos, float size) {
                 s1[j] = start;
                 start += pos;
 
-
                 vertices.push_back(start.x);
                 vertices.push_back(start.y);
                 vertices.push_back(start.z);
             }
-            glm::vec3 normal = glm::abs(glm::cross((s1[0] - s1[1]), (s1[2] - s1[1])));
-            if (i == 2 && k == 1) {
-                std::cout << "in: " << normal.x << " " << normal.y << " " << normal.z << "\n";
-            }
+            glm::vec3 normal = glm::cross((s1[0] - s1[1]), (s1[2] - s1[1]));
+            if (glm::dot(normal, pos - s1[0]) >= 0)
+                normal *= -1;
+
             for (int j = 0; j < 4; j++) {
                 normals.push_back(normal.x);
                 normals.push_back(normal.y);
