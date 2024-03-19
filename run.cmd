@@ -1,2 +1,2 @@
-g++ -std=c++17 -w -Wl,--enable-stdcall-fixup -L./lib -I./include main.cpp cam.cpp point.cpp sphere.cpp cube.cpp line.cpp shaders/shader.cpp vertex_array.cpp -o main glut32.dll glu32.dll -lopengl32 lib3ds-1.3.dll SDL2.dll -lDevIL -lglext -lglfw3dll
+g++ -std=c++17 -w -Wl,--enable-stdcall-fixup -L./lib -I./include main.cpp texture_picking.cpp cam.cpp point.cpp sphere.cpp cube.cpp line.cpp shaders/shader.cpp vertex_array.cpp -o main glut32.dll glu32.dll -lopengl32 lib3ds-1.3.dll SDL2.dll -lDevIL -lglext -lglfw3dll
 main

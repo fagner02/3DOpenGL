@@ -17,4 +17,5 @@ public:
     Camera(float width, float height);
     void applyMatrix(int shaderProgram);
     void applyLightPos(int shaderProgram, glm::vec3 lightPos);
+    void applyLightColor(int shaderProgram, glm::vec3 lightColor);
 };

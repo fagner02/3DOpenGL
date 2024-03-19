@@ -18,12 +18,14 @@
 #include "point.h"
 #include "line.h"
 #include "cam.h"
+#include "texture_picking.h"
 
 using namespace std;
 
 double width = 800, height = 600;
 Camera cam(width, height);
 bool down = false;
+bool first = false;
 bool follow_cursor = false;
 bool right_pressed = false;
 
@@ -33,13 +35,14 @@ struct MousePos {
 } mousePos;
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    std::cout << action;
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
+        first = true;
         down = true;
     }
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
         down = false;
+    }
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
         if (action == GLFW_PRESS) {
             glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
@@ -51,12 +54,16 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 }
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (down || follow_cursor) {
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)((xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(1.0f, 0.0f, 0.0f));
-        cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
-        mousePos.x = xpos;
-        mousePos.y = ypos;
+    if (down) {
+        first = false;
+
+        if (follow_cursor) {
+            cam.orientation = glm::rotate(cam.orientation, glm::radians((float)((xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
+            cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(1.0f, 0.0f, 0.0f));
+            cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
+            mousePos.x = xpos;
+            mousePos.y = ypos;
+        }
     }
     if (right_pressed) {
         cam.pos = glm::rotate(cam.pos, glm::radians((float)(-(xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -105,6 +112,7 @@ int main() {
         std::cout << "erro";
         return -1;
     }
+
     glfwSetErrorCallback(error_callback);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
     GLFWwindow* window = glfwCreateWindow(width, height, "Opengl Graphics", nullptr, nullptr);
@@ -122,7 +130,8 @@ int main() {
 
     Shader lightless("./shaders/lightless.vert", "./shaders/lightless.frag");
     Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
-    Shader shader("./shaders/vertex_shader.glsl", "./shaders/frag.glsl");
+    Shader defaultShader("./shaders/default.vert", "./shaders/default.frag");
+    Shader picking("./shaders/picking.vert", "./shaders/picking.frag");
 
     glm::vec3 lightPos(0.5, 0.5, 0.5);
     Sphere sphere(0.2, glm::vec3(0.0, 0.0, -0.3));
@@ -225,22 +234,61 @@ int main() {
     Line line1(points[0], points[1], glm::vec3(0.8, 0.5, 0.5));
     Line line2(points[2], points[1], glm::vec3(0.0, 0.8, 0.0));
 
-    while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.5, 0.2, 0.3, 1);
+    Picking pickingTexture;
+    pickingTexture.init(width, height);
+    glm::vec3 lightColor(1.0f);
+    unsigned int selected = 0;
 
-        shader.useShader();
-        cam.applyMatrix(shader.shaderProgram);
-        cam.applyLightPos(shader.shaderProgram, lightPos);
-        cube.applyMatrix(shader.shaderProgram);
+    while (!glfwWindowShouldClose(window)) {
+        pickingTexture.enableWriting();
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        picking.useShader();
+
+        cam.applyMatrix(picking.shaderProgram);
+        cube2.applyMatrix(picking.shaderProgram);
         cube2.bindVAO();
         glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
-        sphere.bindVAO();
-        glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
+
+        pickingTexture.disableWriting();
+
+        PixelInfo pixel = pickingTexture.ReadPixel(mousePos.x, height - mousePos.y, 1, 1);
+
+        if (!down) {
+            if (first) {
+                std::cout << pixel.ObjectID << "\n";
+                selected = pixel.ObjectID;
+                first = false;
+            }
+        }
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        pickingTexture.applyIndex(picking.shaderProgram, 1);
+        glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
+        glClearColor(0.5, 0.2, 0.3, 1);
+
+        // pixel.Print();
+        defaultShader.useShader();
+
+        cam.applyMatrix(defaultShader.shaderProgram);
+        cam.applyLightPos(defaultShader.shaderProgram, lightPos);
+
+        if (selected == 1) {
+            lightColor = glm::vec3(0.7, 0.2, 0.2);
+        } else {
+            lightColor = glm::vec3(1.0);
+        }
+        cam.applyLightColor(defaultShader.shaderProgram, lightColor);
+        cube2.applyMatrix(defaultShader.shaderProgram);
+        cube2.bindVAO();
+        glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
+        // sphere.bindVAO();
+        // glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
         // vao.bindVAO();
         // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
-        frontFace.bindVAO();
-        glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
+        // frontFace.bindVAO();
+        // glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
 
         lightless.useShader();
         cam.applyMatrix(lightless.shaderProgram);

@@ -17,3 +17,8 @@ void Camera::applyLightPos(int shaderProgram, glm::vec3 lightPos) {
     int lightPosLoc = glGetUniformLocation(shaderProgram, "lightPos");
     glUniform3f(lightPosLoc, lightPos.x, lightPos.y, lightPos.z);
 }
+
+void Camera::applyLightColor(int shaderProgram, glm::vec3 lightColor) {
+    int lightPosLoc = glGetUniformLocation(shaderProgram, "lightColor");
+    glUniform3f(lightPosLoc, lightColor.x, lightColor.y, lightColor.z);
+}
