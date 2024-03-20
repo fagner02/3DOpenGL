@@ -15,22 +15,21 @@
 #include <stdio.h>
 #include <setjmp.h>
 
-#include "../include/il.h"
+#include "../include/IL/il.h"
 
-class OpenTextures
-{
-   public:
+class OpenTextures {
+public:
 
-      OpenTextures(){};
-      ~OpenTextures(){};
+   OpenTextures() {};
+   ~OpenTextures() {};
 
-      //Load an image using DevIL and return the devIL handle (-1 if failure)
-      static ILuint LoadImage(const char *filename);
-      static void loadTexture( const char * filename, int wrap );
+   //Load an image using DevIL and return the devIL handle (-1 if failure)
+   static ILuint LoadImage(const char* filename);
+   static void loadTexture(const char* filename, int wrap);
 
-      static void loadTextureRAW( const char * filename, int wrap );
-      static void loadTextureBMP( const char * szFileName, int wrap );
-      static void read_JPEG_file ( char * filename, int wrap );
+   static void loadTextureRAW(const char* filename, int wrap);
+   static void loadTextureBMP(const char* szFileName, int wrap);
+   static void read_JPEG_file(char* filename, int wrap);
 
 } typedef OT;
 

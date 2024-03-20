@@ -9,21 +9,26 @@
 #include "./include/glm/glm.hpp"
 #include "./include/glm/gtc/type_ptr.hpp"
 
+struct VAOBuffers {
+    std::vector<glm::vec3> coordinates;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec3> normals;
+    std::vector<glm::vec2> texCoord;
+    std::vector<unsigned int> indexes;
+};
+
 class VertexArray {
 protected:
-    void defaultLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals = std::vector<float>());
-    void indexLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes);
+    void initialize(VAOBuffers buffers);
 private:
-    void bindAttrib(std::vector<float> buffer, int index);
-    void initialize(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals);
-    unsigned int vao, vbo[3], ebo;
+    template<typename T>
+    void bindAttrib(std::vector<T> buffer, int index, int size);
+    unsigned int vao, vbo[4], ebo;
+    int attrNum;
 public:
     glm::mat4 modelMatrix = glm::mat4(1.0);
     unsigned int bufferCount;
-    VertexArray(std::vector<float> coordinates, std::vector<float> colors);
-    VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals);
-    VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes);
-    VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<unsigned int> indexes);
+    VertexArray(VAOBuffers buffers);
     VertexArray();
     void bindVAO();
     void enableAttribs();

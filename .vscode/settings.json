@@ -47,7 +47,10 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "*.glsl": "cpp"
+        "*.glsl": "cpp",
+        "chrono": "cpp",
+        "list": "cpp",
+        "ratio": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

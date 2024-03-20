@@ -2,55 +2,54 @@
 
 VertexArray::VertexArray() {}
 
-void VertexArray::bindAttrib(std::vector<float> buffer, int index) {
+template<typename T>
+void VertexArray::bindAttrib(std::vector<T> buffer, int index, int size) {
+    // std::cout << buffer[0].length() << ' ' << sizeof(T) << "\n";
     glBindBuffer(GL_ARRAY_BUFFER, vbo[index]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * buffer.size(), buffer.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * buffer.size(), buffer.data(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glDisableVertexAttribArray(index);
 }
 
-void VertexArray::initialize(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals) {
+void VertexArray::initialize(VAOBuffers buffers) {
+    bool hasNormals = buffers.normals.size() > 0;
+    bool hasColors = buffers.colors.size() > 0;
+    bool hasTexCoord = buffers.texCoord.size() > 0;
     glGenVertexArrays(1, &vao);
-    glGenBuffers(normals.size() == 0 ? 2 : 3, vbo);
+    attrNum = 1 + hasNormals + hasColors + hasTexCoord;
+    glGenBuffers(attrNum, vbo);
     glBindVertexArray(vao);
 
-    this->bindAttrib(coordinates, 0);
-    this->bindAttrib(colors, 1);
-    if (normals.size() > 0)this->bindAttrib(normals, 2);
+    this->bindAttrib(buffers.coordinates, 0, 3);
+
+    int index = 1;
+    if (hasColors) {
+        this->bindAttrib(buffers.colors, index, 3);
+        index++;
+    }
+    if (hasNormals) {
+        this->bindAttrib(buffers.normals, index, 3);
+        index++;
+    }
+    if (hasTexCoord) {
+        this->bindAttrib(buffers.texCoord, index, 2);
+    }
+
+    if (buffers.indexes.size() > 0) {
+        bufferCount = buffers.indexes.size();
+        glGenBuffers(1, &ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffers.indexes.size() * sizeof(unsigned int), buffers.indexes.data(), GL_DYNAMIC_DRAW);
+    }
 }
 
-void VertexArray::defaultLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals) {
-    initialize(coordinates, colors, normals);
-    bufferCount = coordinates.size() / 3;
-}
-
-void VertexArray::indexLateConstructor(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes) {
-    initialize(coordinates, colors, normals);
-    bufferCount = indexes.size();
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexes.size() * sizeof(unsigned int), indexes.data(), GL_DYNAMIC_DRAW);
-}
-
-VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors) {
-    defaultLateConstructor(coordinates, colors);
-}
-
-VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals) {
-    defaultLateConstructor(coordinates, colors, normals);
-}
-
-VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<float> normals, std::vector<unsigned int> indexes) {
-    indexLateConstructor(coordinates, colors, normals, indexes);
-}
-
-VertexArray::VertexArray(std::vector<float> coordinates, std::vector<float> colors, std::vector<unsigned int> indexes) {
-    indexLateConstructor(coordinates, colors, std::vector<float>(), indexes);
+VertexArray::VertexArray(VAOBuffers buffers) {
+    initialize(buffers);
 }
 
 void VertexArray::enableAttribs() {
-    for (int i = 0; i < 3;i++) {
+    for (int i = 0; i < attrNum;i++) {
         glEnableVertexAttribArray(i);
     }
 }
