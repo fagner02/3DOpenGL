@@ -6,9 +6,9 @@ template<typename T>
 void VertexArray::bindAttrib(std::vector<T> buffer, int index, int size) {
     // std::cout << buffer[0].length() << ' ' << sizeof(T) << "\n";
     glBindBuffer(GL_ARRAY_BUFFER, vbo[index]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * buffer.size(), buffer.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(T) * buffer.size(), buffer.data(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(index);
-    glVertexAttribPointer(index, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, 0);
     glDisableVertexAttribArray(index);
 }
 

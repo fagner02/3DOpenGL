@@ -20,4 +20,6 @@ public:
     void useShader();
 
     void deleteShader();
+
+    char* loadSource(char* filename);
 };

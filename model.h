@@ -43,8 +43,4 @@ public:
 private:
     std::vector<Mesh> meshes;
     std::vector<Texture> textures;
-    VertexArray vertexArray;
-
-    Assimp::Importer importer;
-
 };

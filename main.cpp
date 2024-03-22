@@ -20,6 +20,7 @@
 #include "cam.h"
 #include "texture_picking.h"
 #include "model.h"
+#include "shapes/plane.h"
 
 using namespace std;
 
@@ -60,9 +61,8 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     }
 
     if (down || follow_cursor) {
-        if (click) return;
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)((xpos - mousePos.x))), glm::vec3(0.0f, 1.0f, 0.0f));
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(ypos - mousePos.y))), glm::vec3(1.0f, 0.0f, 0.0f));
+        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)((xpos - mousePos.x) * 0.5)), glm::vec3(0.0f, 1.0f, 0.0f));
+        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)((ypos - mousePos.y) * 0.5)), glm::vec3(1.0f, 0.0f, 0.0f));
         cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
         mousePos.x = xpos;
         mousePos.y = ypos;
@@ -81,6 +81,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     cam.view = glm::translate(cam.view, glm::vec3(xoffset, yoffset, 0.0));
 }
 
+glm::vec2 displace(-0.028, 0.0460002);
+glm::vec2 scale(0.0);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_LEFT) {
         cam.pos += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
@@ -93,6 +95,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_UP) {
         cam.pos += 0.1f * glm::normalize(glm::cross(glm::cross(cam.orientation, cam.up), cam.orientation));
+    }
+    if (key == GLFW_KEY_A) {
+        displace.x += 0.0001f;
+    }
+    if (key == GLFW_KEY_D) {
+        displace.x -= 0.0001f;
+    }
+    if (key == GLFW_KEY_S) {
+        displace.y -= 0.0001f;
+    }
+    if (key == GLFW_KEY_W) {
+        displace.y += 0.0001f;
+    }
+    if (key == GLFW_KEY_I) {
+        scale.y += 0.01f;
+    }
+    if (key == GLFW_KEY_K) {
+        scale.y -= 0.01f;
+    }
+    if (key == GLFW_KEY_J) {
+        scale.x += 0.1f;
+    }
+    if (key == GLFW_KEY_L) {
+        scale.x -= 0.1f;
+    }
+    if (key == GLFW_KEY_F) {
+        std::cout << displace.x << " " << displace.y << " " << scale.x << " " << scale.y << "\n";
     }
     if (key == GLFW_KEY_EQUAL) {
         cam.pos += 0.1f * glm::normalize(cam.orientation);
@@ -140,17 +169,30 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_MULTISAMPLE);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
 
     Shader lightless("./shaders/lightless.vert", "./shaders/lightless.frag");
     Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
     Shader defaultShader("./shaders/default.vert", "./shaders/default.frag");
     Shader picking("./shaders/picking.vert", "./shaders/picking.frag");
-    Shader textureShader("./shader/texture.vert", "./shader/texture.frag");
+    Shader textureShader("./shaders/texture.vert", "./shaders/texture.frag");
+    Shader shellShader("./shaders/shell.vert", "./shaders/shell.frag");
 
-    glm::vec3 lightPos(0.5, 0.5, 0.5);
+    glm::vec3 lightPos(0.1, 0.1, 0.1);
     Sphere sphere(0.2, glm::vec3(0.0, 0.0, -0.3));
     Cube cube2(glm::vec3(0.0, 0.0, 0.0), 0.7);
     Cube cube(lightPos, 0.05);
+    Plane plane(glm::vec3(0.0), 0.5);
+    Model model;
+    model.loadFile("./3ds/maclaren.3DS");
+    std::vector<Plane> shells;
+    int shellNum = 100;
+    float shellHeight = 0.05;
+    for (size_t i = 0; i < shellNum; i++) {
+        shells.push_back(Plane(glm::vec3(0.0, ((float)i / shellNum) * shellHeight, 0.0), 0.5));
+    }
+
 
     // VertexArray vao = VertexArray(VAOBuffers{ {
     //         -0.5f,	0.0f,	0.5f,
@@ -253,6 +295,7 @@ int main() {
     glm::vec3 lightColor(1.0f);
     unsigned int selected = 0;
 
+
     while (!glfwWindowShouldClose(window)) {
         pickingTexture.enableWriting();
 
@@ -261,9 +304,9 @@ int main() {
         picking.useShader();
 
         cam.applyMatrix(picking.shaderProgram);
-        cube2.applyMatrix(picking.shaderProgram);
-        cube2.bindVAO();
-        glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
+        // cube2.applyMatrix(picking.shaderProgram);
+        // cube2.bindVAO();
+        // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
 
         pickingTexture.disableWriting();
 
@@ -280,43 +323,65 @@ int main() {
         glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
         glClearColor(0.5, 0.2, 0.3, 1);
 
-        // pixel.Print();
-        defaultShader.useShader();
-
-        cam.applyMatrix(defaultShader.shaderProgram);
-        cam.applyLightPos(defaultShader.shaderProgram, lightPos);
-
-        if (selected == 1) {
-            lightColor = glm::vec3(0.7, 0.5, 0.5);
-        } else {
-            lightColor = glm::vec3(1.0);
-        }
-        cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-        cube2.applyMatrix(defaultShader.shaderProgram);
-        cube2.bindVAO();
-        glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
-        sphere.bindVAO();
-        glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
-        // vao.bindVAO();
-        // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
-        // frontFace.bindVAO();
-        // glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
-
-        // lightless.useShader();
-        // cam.applyMatrix(lightless.shaderProgram);
-
-        // line.bindVAO();
-        // glDrawArrays(GL_LINES, 0, line.bufferCount);
-        // line1.bindVAO();
-        // glDrawArrays(GL_LINES, 0, line1.bufferCount);
-        // line2.bindVAO();
-        // glDrawArrays(GL_LINES, 0, line2.bufferCount);
-
         lightShader.useShader();
         cam.applyMatrix(lightShader.shaderProgram);
         cube.applyMatrix(lightShader.shaderProgram);
         cube.bindVAO();
         glDrawElements(GL_TRIANGLES, cube.bufferCount, GL_UNSIGNED_INT, 0);
+        // pixel.Print();
+        shellShader.useShader();
+
+        cam.applyMatrix(shellShader.shaderProgram);
+        cam.applyLightPos(shellShader.shaderProgram, lightPos);
+
+        if (selected == 1) {
+            lightColor = glm::vec3(0.7, 0.5, 0.5);
+        } else {
+            lightColor = glm::vec3(1.0, 0.5, 0.5);
+        }
+        cam.applyLightColor(shellShader.shaderProgram, lightColor);
+        // cube2.applyMatrix(defaultShader.shaderProgram);
+        // cube2.bindVAO();
+        // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
+        // sphere.bindVAO();
+        // glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
+        // model.applyMatrix(defaultShader.shaderProgram);
+        // model.draw();
+        unsigned int dloc = glGetUniformLocation(shellShader.shaderProgram, "divisions");
+        glUniform1f(dloc, 30);
+        unsigned int ddloc = glGetUniformLocation(shellShader.shaderProgram, "displace");
+        glUniform2fv(ddloc, 1, glm::value_ptr(displace));
+        unsigned int sdloc = glGetUniformLocation(shellShader.shaderProgram, "scale");
+        glUniform2fv(sdloc, 1, glm::value_ptr(scale));
+        unsigned int uloc = glGetUniformLocation(shellShader.shaderProgram, "shellNum");
+        glUniform1f(uloc, shellNum);
+        unsigned int loc = glGetUniformLocation(shellShader.shaderProgram, "shellIndex");
+        for (size_t i = 0; i < shellNum; i++) {
+            glUniform1f(loc, i);
+            shells[i].applyMatrix(shellShader.shaderProgram);
+            shells[i].bindVAO();
+            glDrawElements(GL_TRIANGLES, shells[i].bufferCount, GL_UNSIGNED_INT, 0);
+        }
+
+        // vao.bindVAO();
+    // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
+    // frontFace.bindVAO();
+    // glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
+
+    // lightless.useShader();
+    // cam.applyMatrix(lightless.shaderProgram);
+
+    // line.bindVAO();
+    // glDrawArrays(GL_LINES, 0, line.bufferCount);
+    // line1.bindVAO();
+    // glDrawArrays(GL_LINES, 0, line1.bufferCount);
+    // line2.bindVAO();
+    // glDrawArrays(GL_LINES, 0, line2.bufferCount);
+
+
+
+        // textureShader.useShader();
+
 
         glfwSwapBuffers(window);
         glfwWaitEvents();
