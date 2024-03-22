@@ -81,8 +81,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     cam.view = glm::translate(cam.view, glm::vec3(xoffset, yoffset, 0.0));
 }
 
-glm::vec2 displace(-0.028, 0.0460002);
-glm::vec2 scale(0.0);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_LEFT) {
         cam.pos += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
@@ -95,33 +93,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
     if (key == GLFW_KEY_UP) {
         cam.pos += 0.1f * glm::normalize(glm::cross(glm::cross(cam.orientation, cam.up), cam.orientation));
-    }
-    if (key == GLFW_KEY_A) {
-        displace.x += 0.0001f;
-    }
-    if (key == GLFW_KEY_D) {
-        displace.x -= 0.0001f;
-    }
-    if (key == GLFW_KEY_S) {
-        displace.y -= 0.0001f;
-    }
-    if (key == GLFW_KEY_W) {
-        displace.y += 0.0001f;
-    }
-    if (key == GLFW_KEY_I) {
-        scale.y += 0.01f;
-    }
-    if (key == GLFW_KEY_K) {
-        scale.y -= 0.01f;
-    }
-    if (key == GLFW_KEY_J) {
-        scale.x += 0.1f;
-    }
-    if (key == GLFW_KEY_L) {
-        scale.x -= 0.1f;
-    }
-    if (key == GLFW_KEY_F) {
-        std::cout << displace.x << " " << displace.y << " " << scale.x << " " << scale.y << "\n";
     }
     if (key == GLFW_KEY_EQUAL) {
         cam.pos += 0.1f * glm::normalize(cam.orientation);
@@ -349,10 +320,6 @@ int main() {
         // model.draw();
         unsigned int dloc = glGetUniformLocation(shellShader.shaderProgram, "divisions");
         glUniform1f(dloc, 30);
-        unsigned int ddloc = glGetUniformLocation(shellShader.shaderProgram, "displace");
-        glUniform2fv(ddloc, 1, glm::value_ptr(displace));
-        unsigned int sdloc = glGetUniformLocation(shellShader.shaderProgram, "scale");
-        glUniform2fv(sdloc, 1, glm::value_ptr(scale));
         unsigned int uloc = glGetUniformLocation(shellShader.shaderProgram, "shellNum");
         glUniform1f(uloc, shellNum);
         unsigned int loc = glGetUniformLocation(shellShader.shaderProgram, "shellIndex");
