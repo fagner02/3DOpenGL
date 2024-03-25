@@ -4,10 +4,9 @@
 #endif
 #include <GL/glut.h>
 #include <GL/glext.h>
-#include <IL/il.h>
 
 class Texture {
-    unsigned int texture;
+    unsigned int texture = 0;
 public:
     Texture(const char* filename);
     void bindTexture();

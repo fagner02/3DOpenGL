@@ -142,6 +142,7 @@ int main() {
     glEnable(GL_MULTISAMPLE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
+    glEnable(GL_CLIP_DISTANCE0);
 
     Shader lightless("./shaders/lightless.vert", "./shaders/lightless.frag");
     Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
@@ -150,7 +151,7 @@ int main() {
     Shader textureShader("./shaders/texture.vert", "./shaders/texture.frag");
     Shader shellShader("./shaders/shell.vert", "./shaders/shell.frag");
 
-    glm::vec3 lightPos(0.1, 0.1, 0.1);
+    glm::vec3 lightPos(0.5, 0.5, 0.5);
     Sphere sphere(0.2, glm::vec3(0.0, 0.0, -0.3));
     Cube cube2(glm::vec3(0.0, 0.0, 0.0), 0.7);
     Cube cube(lightPos, 0.05);
@@ -161,111 +162,14 @@ int main() {
     int shellNum = 100;
     float shellHeight = 0.05;
     for (size_t i = 0; i < shellNum; i++) {
-        shells.push_back(Plane(glm::vec3(0.0, ((float)i / shellNum) * shellHeight, 0.0), 0.5));
+        shells.push_back(Plane(glm::vec3(0.0, ((float)i / shellNum) * shellHeight, 0.0), 1.0));
     }
 
-
-    // VertexArray vao = VertexArray(VAOBuffers{ {
-    //         -0.5f,	0.0f,	0.5f,
-    //         -0.5f,	0.0f,	-0.5f,
-    //         0.5f,	0.0f,	-0.5f,
-    //         0.5f,	0.0f,	0.5f,
-    //         -0.5f,	0.0f,	0.5f,
-    //         -0.5f,	0.0f,	-0.5f,
-    //         0.0f,	0.8f,	0.0f,
-    //         -0.5f,	0.0f,	-0.5f,
-    //         0.5f,	0.0f,	-0.5f,
-    //         0.0f,	0.8f,	0.0f,
-    //         0.5f,	0.0f,	-0.5f,
-    //         0.5f,	0.0f,	0.5f,
-    //         0.0f,	0.8f,	0.0f,
-    //         0.5f,	0.0f,	0.5f,
-    //         -0.5f,	0.0f,	0.5f,
-    //         0.0f,	0.8f,	0.0f,
-    //     }, {
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.92f,	0.86f,	0.76f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.92f,	0.86f,	0.76f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.92f,	0.86f,	0.76f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.83f,	0.70f,	0.44f,
-    //         0.92f,	0.86f,	0.76f,
-    //     }, {
-    //         0.0f,	-1.0f,	0.0f,
-    //         0.0f,	-1.0f,	0.0f,
-    //         0.0f,	-1.0f,	0.0f,
-    //         0.0f,	-1.0f,	0.0f,
-    //         -0.8f,	0.5f,	0.0f,
-    //         -0.8f,	0.5f,	0.0f,
-    //         -0.8f,	0.5f,	0.0f,
-    //         0.0f,	0.5f,	-0.8f,
-    //         0.0f,	0.5f,	-0.8f,
-    //         0.0f,	0.5f,	-0.8f,
-    //         0.8f,	0.5f,	0.0f,
-    //         0.8f,	0.5f,	0.0f,
-    //         0.8f,	0.5f,	0.0f,
-    //         0.0f,	0.5f,	0.8f,
-    //         0.0f,	0.5f,	0.8f,
-    //         0.0f,	0.5f,	0.8f
-    //     },{}, {
-    //         0, 1, 2, // Bottom side
-    //         0, 2, 3, // Bottom side
-    //         4, 6, 5, // Left side
-    //         7, 9, 8, // Non-facing side
-    //         10, 12, 11, // Right side
-    //         13, 15, 14 // Facing side
-    //     } });
-
-    // glm::vec3 points[] = {
-    //     glm::vec3(-0.35, 0.35, -0.35),
-    //     glm::vec3(-0.35, 0.35, 0.35),
-    //     glm::vec3(0.35, 0.35, -0.35),
-    //     glm::vec3(0.35, 0.35, 0.35)
-    // };
-
-    // glm::vec3 n = glm::cross(points[2] - points[1], points[0] - points[1]);
-
-    // vector<float> lineV;
-    // for (int i = 0; i < 4; i++) {
-    //     for (int j = 0;j < 3;j++) {
-    //         lineV.push_back(points[i][j]);
-    //     }
-    // }
-    // VertexArray frontFace({
-    //     lineV, {
-    //         0.8,0.2,0.5,
-    //         0.8,0.2,0.5,
-    //         0.8,0.2,0.5,
-    //         0.8,0.2,0.5,
-    //     }, {
-    //         n.x, n.y, n.z,
-    //         n.x, n.y, n.z,
-    //         n.x, n.y, n.z,
-    //         n.x, n.y, n.z,
-    //     },{},
-    //     {
-    //         0, 1, 2,
-    //         1, 2, 3
-    //     } }
-    // );
-    // Line line(glm::vec3(0), n);
-    // Line line1(points[0], points[1], glm::vec3(0.8, 0.5, 0.5));
-    // Line line2(points[2], points[1], glm::vec3(0.0, 0.8, 0.0));
-
+    Texture azulejo("./textures/azulejo.jpg");
     Picking pickingTexture;
     pickingTexture.init(width, height);
     glm::vec3 lightColor(1.0f);
     unsigned int selected = 0;
-
 
     while (!glfwWindowShouldClose(window)) {
         pickingTexture.enableWriting();
@@ -281,18 +185,38 @@ int main() {
 
         pickingTexture.disableWriting();
 
-        PixelInfo pixel = pickingTexture.ReadPixel(mousePos.x, height - mousePos.y, 1, 1);
+        // PixelInfo pixel = pickingTexture.ReadPixel(mousePos.x, height - mousePos.y, 1, 1);
 
         if (!down && click) {
-            std::cout << pixel.ObjectID << "\n";
-            selected = pixel.ObjectID;
+            // std::cout << pixel.ObjectID << "\n";
+            // selected = pixel.ObjectID;
             click = false;
         }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         pickingTexture.applyIndex(picking.shaderProgram, 1);
-        glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
+        // glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
         glClearColor(0.5, 0.2, 0.3, 1);
+
+        defaultShader.useShader();
+
+        azulejo.bindTexture();
+        cam.applyMatrix(defaultShader.shaderProgram);
+        cam.applyLightPos(defaultShader.shaderProgram, lightPos);
+
+        if (selected == 1) {
+            lightColor = glm::vec3(0.7, 0.5, 0.5);
+        } else {
+            lightColor = glm::vec3(1.0, 0.5, 0.5);
+        }
+        cam.applyLightColor(defaultShader.shaderProgram, lightColor);
+        // sphere.applyMatrix(defaultShader.shaderProgram);
+        // sphere.bindVAO();
+        // glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
+
+        cube2.applyMatrix(defaultShader.shaderProgram);
+        cube2.bindVAO();
+        glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
 
         lightShader.useShader();
         cam.applyMatrix(lightShader.shaderProgram);
@@ -311,15 +235,12 @@ int main() {
             lightColor = glm::vec3(1.0, 0.5, 0.5);
         }
         cam.applyLightColor(shellShader.shaderProgram, lightColor);
-        // cube2.applyMatrix(defaultShader.shaderProgram);
-        // cube2.bindVAO();
-        // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
         // sphere.bindVAO();
         // glDrawArrays(GL_TRIANGLES, 0, sphere.bufferCount);
         // model.applyMatrix(defaultShader.shaderProgram);
         // model.draw();
         unsigned int dloc = glGetUniformLocation(shellShader.shaderProgram, "divisions");
-        glUniform1f(dloc, 30);
+        glUniform1f(dloc, 50);
         unsigned int uloc = glGetUniformLocation(shellShader.shaderProgram, "shellNum");
         glUniform1f(uloc, shellNum);
         unsigned int loc = glGetUniformLocation(shellShader.shaderProgram, "shellIndex");
