@@ -23,14 +23,17 @@ protected:
 private:
     template<typename T>
     void bindAttrib(std::vector<T> buffer, int index, int size);
-    unsigned int vao, vbo[4], ebo;
+    unsigned int vao = 0, vbo[4], ebo;
     int attrNum;
 public:
     glm::mat4 modelMatrix = glm::mat4(1.0);
     unsigned int bufferCount;
     VertexArray(VAOBuffers buffers);
     VertexArray();
+    ~VertexArray();
     void bindVAO();
     void enableAttribs();
     void applyMatrix(int shaderProgram);
+    void deleteVertexArray();
+    virtual void draw(int shaderProgram);
 };

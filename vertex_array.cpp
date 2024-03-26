@@ -41,11 +41,17 @@ void VertexArray::initialize(VAOBuffers buffers) {
         glGenBuffers(1, &ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffers.indexes.size() * sizeof(unsigned int), buffers.indexes.data(), GL_DYNAMIC_DRAW);
+    } else {
+        bufferCount = buffers.coordinates.size() * sizeof(float);
     }
 }
 
 VertexArray::VertexArray(VAOBuffers buffers) {
     initialize(buffers);
+}
+
+VertexArray::~VertexArray() {
+    deleteVertexArray();
 }
 
 void VertexArray::enableAttribs() {
@@ -62,4 +68,16 @@ void VertexArray::bindVAO() {
 void VertexArray::applyMatrix(int shaderProgram) {
     int modelLoc = glGetUniformLocation(shaderProgram, "model");
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+}
+
+void VertexArray::deleteVertexArray() {
+    glDeleteVertexArrays(1, &vao);
+    glDeleteBuffers(attrNum, vbo);
+    glDeleteBuffers(1, &ebo);
+}
+
+void VertexArray::draw(int shaderProgram) {
+    bindVAO();
+    applyMatrix(shaderProgram);
+    glDrawArrays(GL_TRIANGLES, 0, bufferCount);
 }

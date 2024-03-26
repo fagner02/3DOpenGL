@@ -24,6 +24,7 @@ void Model::loadFile(const char* name) {
     unsigned int indexCount = 0;
 
     for (int i = 0;i < scene->mNumMeshes;i++) {
+
         meshes[i].baseVertex = vertex;
         meshes[i].baseIndex = index;
         meshes[i].indexNum = scene->mMeshes[i]->mNumFaces * 3;
