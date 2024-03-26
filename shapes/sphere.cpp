@@ -18,16 +18,13 @@ glm::vec3 Sphere::calcPoint(int i, int j, double& z_step, double& step, double& 
 }
 
 Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : VertexArray() {
+    this->pos = pos;
     glm::vec3 center(0.0, 0.0, 0.0);
     double h = sqrt((radius * radius) * 2.0);
     double diameter = 2 * radius;
     double stepCount = steps;
     double step = diameter / stepCount;
     double z_step = h / stepCount;
-
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> colors;
-    std::vector<glm::vec3> normals;
 
     int sign[2] = { 1,-1 };
 
@@ -53,7 +50,6 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
                             vertices.push_back(points[p]);
                             colors.push_back(color);
                             normals.push_back(normal);
-
                         }
 
                         normal = (glm::cross((points[2] - points[0]), (points[3] - points[0])));
@@ -65,7 +61,6 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
                             vertices.push_back(points[indexs[p]]);
                             colors.push_back(color);
                             normals.push_back(normal);
-
                         }
 
                         indexj++;
@@ -95,4 +90,10 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
     }
 
     initialize({ vertices, colors, normals });
+}
+
+void Sphere::draw(int shaderProgram) {
+    bindVAO();
+    applyMatrix(shaderProgram);
+    glDrawArrays(GL_TRIANGLES, 0, bufferCount);
 }

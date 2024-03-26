@@ -2,9 +2,7 @@
 
 Plane::Plane(glm::vec3 pos, float length) {
     float half = length / 2;
-    std::vector<glm::vec3> vertices;
     std::vector<glm::vec3> colors;
-    std::vector<glm::vec3> normals;
     std::vector<glm::vec2> uvs;
     std::vector<unsigned int> indexes;
 
@@ -28,4 +26,10 @@ Plane::Plane(glm::vec3 pos, float length) {
     }
 
     initialize({ vertices, colors, normals, uvs, indexes });
+}
+
+void Plane::draw(int shaderProgram) {
+    bindVAO();
+    applyMatrix(shaderProgram);
+    glDrawElements(GL_TRIANGLES, bufferCount, GL_UNSIGNED_INT, 0);
 }

@@ -2,9 +2,6 @@
 
 Cube::Cube(glm::vec3 pos, float size) {
     this->pos = pos;
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> colors;
-    std::vector<glm::vec3> normals;
     std::vector<unsigned int> indexes;
     std::vector<glm::vec2> uvs;
     struct point {
@@ -30,7 +27,8 @@ Cube::Cube(glm::vec3 pos, float size) {
                 uvs.push_back(glm::vec2((float)(points[j].x == 1), (float)(points[j].y == 1)));
             }
             glm::vec3 normal = glm::cross((s1[0] - s1[1]), (s1[2] - s1[1]));
-            if (glm::dot(normal, pos - s1[0]) >= 0)
+            glm::distance(glm::vec3(0.0), normal);
+            if (glm::length(s1[0] + normal) < glm::length(s1[0]))
                 normal *= -1;
 
             for (int j = 0; j < 4; j++) {
@@ -48,4 +46,10 @@ Cube::Cube(glm::vec3 pos, float size) {
     }
 
     initialize({ vertices, colors, normals, uvs, indexes });
+}
+
+void Cube::draw(int shaderProgram) {
+    bindVAO();
+    applyMatrix(shaderProgram);
+    glDrawElements(GL_TRIANGLES, bufferCount, GL_UNSIGNED_INT, 0);
 }

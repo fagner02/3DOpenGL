@@ -12,5 +12,10 @@ private:
     glm::vec3 calcPoint(int i, int j, double& z_step, double& step, double& h, double& diameter, int& sign1, int& sign2, bool flip);
     glm::vec3 normalize(glm::vec3 a, glm::vec3 b, double length);
 public:
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec3> normals;
+    glm::vec3 pos;
     Sphere(double radius, glm::vec3 pos = glm::vec3(0.0), int steps = 100, glm::vec3 color = glm::vec3(0.8));
+    void draw(int shaderProgram);
 };

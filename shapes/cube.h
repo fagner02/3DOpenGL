@@ -9,6 +9,11 @@
 
 class Cube : public VertexArray {
 public:
+
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec3> normals;
     glm::vec3 pos;
     Cube(glm::vec3 pos, float size = 0.1);
+    void draw(int shaderProgram);
 };

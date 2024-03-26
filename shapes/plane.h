@@ -9,5 +9,10 @@
 
 class Plane : public VertexArray {
 public:
+
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
+
     Plane(glm::vec3 pos, float length);
+    void draw(int shaderProgram);
 };
