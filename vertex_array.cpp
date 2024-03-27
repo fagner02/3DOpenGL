@@ -4,7 +4,6 @@ VertexArray::VertexArray() {}
 
 template<typename T>
 void VertexArray::bindAttrib(std::vector<T> buffer, int index, int size) {
-    // std::cout << buffer[0].length() << ' ' << sizeof(T) << "\n";
     glBindBuffer(GL_ARRAY_BUFFER, vbo[index]);
     glBufferData(GL_ARRAY_BUFFER, sizeof(T) * buffer.size(), buffer.data(), GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(index);
@@ -17,7 +16,6 @@ void VertexArray::initialize(VAOBuffers buffers) {
     bool hasColors = buffers.colors.size() > 0;
     bool hasTexCoord = buffers.texCoord.size() > 0;
     glGenVertexArrays(1, &vao);
-    std::cout << " " << vao << "\n";
 
     attrNum = 1 + hasNormals + hasColors + hasTexCoord;
     glGenBuffers(attrNum, vbo);
