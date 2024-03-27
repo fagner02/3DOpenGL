@@ -26,6 +26,7 @@ struct Mesh {
 
 class Model : public VertexArray {
 public:
+    std::vector<Mesh> meshes;
     Model();
     ~Model();
 
@@ -40,7 +41,8 @@ public:
     void draw();
 
     void loadTextures(const aiScene* scene);
+
+    VAOBuffers getModelBuffers(const char* name);
 private:
-    std::vector<Mesh> meshes;
     std::vector<Texture> textures;
 };

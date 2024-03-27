@@ -179,12 +179,12 @@ int main() {
     Shader textureShader("./shaders/texture.vert", "./shaders/texture.frag");
     Shader shellShader("./shaders/shell.vert", "./shaders/shell.frag");
 
-    glm::vec3 lightPos(0.5, 0.5, 0.5);
+    glm::vec3 lightPos(0.5, 0.5, 1.5);
     Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
     Cube cube(lightPos, 0.05);
     // Plane plane(glm::vec3(0.0), 0.5);
     Model model;
-    model.loadFile("./3ds/skeleton.3DS");
+    model.loadFile("./3ds/maclaren.3ds");
     // std::vector<Plane> shells;
     // int shellNum = 100;
     // float shellHeight = 0.1;
@@ -200,7 +200,7 @@ int main() {
 
     // clipPlane.calculateClipPlane();
 
-    ShellTexture shellTexture(Sphere::calcSphereBuffers(0.3, glm::vec3(0.0, 0.0, -0.3), 5));
+    ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 100, model.meshes);
     // for (size_t i = 0; i < sphereBuffers.coordinates.size(); i++) {
     //     glm::vec3 normalPoint = normalize(glm::vec3(0.0), sphereBuffers.normals[i], 0.05);
 
@@ -275,6 +275,7 @@ int main() {
 
         // sphere.applyMatrix(defaultShader.shaderProgram);
         // sphere.draw(defaultShader.shaderProgram);
+        // model.applyMatrix(defaultShader.shaderProgram);
         // model.draw();
         // glm::vec3 planePoint(0.0, clipPlane.planeHeight, 0.0);
         //std::cout << -glm::dot(planeNormal, planePoint) << "\n";

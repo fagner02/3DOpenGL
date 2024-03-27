@@ -1,6 +1,10 @@
 #include "shell_texture.h"
 
-ShellTexture::ShellTexture(VAOBuffers buffers) {
+ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, int divisions, std::vector<Mesh> modelMeshes) {
+    this->modelMeshes = modelMeshes;
+    this->shellNum = shellNum;
+    this->shellHeight = shellHeight;
+    this->divisions = divisions;
     hasIndexes = buffers.indexes.size() > 0;
     std::vector<glm::vec3> vertices = buffers.coordinates;
     meshes.push_back(new VertexArray(buffers));
@@ -16,7 +20,7 @@ ShellTexture::ShellTexture(VAOBuffers buffers) {
 
 void ShellTexture::draw(int shaderProgram) {
     int dloc = glGetUniformLocation(shaderProgram, "divisions");
-    glUniform1f(dloc, 70);
+    glUniform1f(dloc, divisions);
     int snloc = glGetUniformLocation(shaderProgram, "shellNum");
     glUniform1f(snloc, shellNum);
     int siloc = glGetUniformLocation(shaderProgram, "shellIndex");
@@ -26,10 +30,16 @@ void ShellTexture::draw(int shaderProgram) {
 
         meshes[i]->applyMatrix(shaderProgram);
         meshes[i]->bindVAO();
-        if (hasIndexes)
+        if (modelMeshes.size() > 0) {
+            for (int i = 0;i < modelMeshes.size();i++) {
+                glDrawElementsBaseVertex(GL_TRIANGLES, modelMeshes[i].indexNum, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * modelMeshes[i].baseIndex), modelMeshes[i].baseVertex);
+            }
+        } else if (hasIndexes) {
             glDrawElements(GL_TRIANGLES, meshes[i]->bufferCount, GL_UNSIGNED_INT, 0);
-        else
+        } else {
             glDrawArrays(GL_TRIANGLES, 0, meshes[i]->bufferCount);
+        }
+
 
     }
 }

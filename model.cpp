@@ -4,7 +4,7 @@ Model::Model() {}
 
 Model::~Model() {}
 
-void Model::loadFile(const char* name) {
+VAOBuffers Model::getModelBuffers(const char* name) {
     Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile(name, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
@@ -17,14 +17,14 @@ void Model::loadFile(const char* name) {
     std::vector<glm::vec3> colors;
     std::vector<glm::vec3> normals;
     std::vector<unsigned int> indexes;
-    std::vector<glm::vec2> textureCoord;
+    std::vector<glm::vec2> uvs;
     unsigned int vertex = 0;
     unsigned int index = 0;
     unsigned int maxIndex = 0;
     unsigned int indexCount = 0;
 
     for (int i = 0;i < scene->mNumMeshes;i++) {
-
+        // vertices.
         meshes[i].baseVertex = vertex;
         meshes[i].baseIndex = index;
         meshes[i].indexNum = scene->mMeshes[i]->mNumFaces * 3;
@@ -34,13 +34,14 @@ void Model::loadFile(const char* name) {
         aiVector3D* mVertices = scene->mMeshes[i]->mVertices;
         aiVector3D* mNormals = scene->mMeshes[i]->mNormals;
         aiVector3D** textureCoords = scene->mMeshes[i]->mTextureCoords;
+
         for (int j = 0;j < scene->mMeshes[i]->mNumVertices; j++) {
             vertices.push_back(glm::vec3(mVertices[j].x, mVertices[j].y, mVertices[j].z) * 0.001f);
 
             aiColor3D color(0.f, 0.f, 0.f);
             scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
             normals.push_back(glm::vec3(mNormals[j].x, mNormals[j].y, mNormals[j].z));
-
+            uvs.push_back(glm::vec2(textureCoords[0][j].x, textureCoords[0][j].y));
             colors.push_back(glm::vec3(color.r, color.g, color.b));
         }
         for (int j = 0;j < scene->mMeshes[i]->mNumFaces; j++) {
@@ -55,10 +56,14 @@ void Model::loadFile(const char* name) {
             }
         }
     }
+    return { vertices, colors, normals, uvs, indexes };
+}
 
-    initialize({ vertices, colors, normals, {}, indexes });
+void Model::loadFile(const char* name) {
 
+    initialize(getModelBuffers(name));
     // loadTextures(scene);
+    // delete scene;
 }
 
 void Model::CreateLightList() {
