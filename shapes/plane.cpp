@@ -1,7 +1,14 @@
 #include "plane.h"
 
 Plane::Plane(glm::vec3 pos, float length) {
+
+    initialize(calcPlaneBuffers(pos, length));
+}
+
+VAOBuffers Plane::calcPlaneBuffers(glm::vec3 pos, float length) {
     float half = length / 2;
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> normals;
     std::vector<glm::vec3> colors;
     std::vector<glm::vec2> uvs;
     std::vector<unsigned int> indexes;
@@ -25,7 +32,7 @@ Plane::Plane(glm::vec3 pos, float length) {
         indexes.push_back(i);
     }
 
-    initialize({ vertices, colors, normals, uvs, indexes });
+    return { vertices, colors, normals, uvs, indexes };
 }
 
 void Plane::draw(int shaderProgram) {

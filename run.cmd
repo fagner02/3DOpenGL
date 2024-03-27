@@ -6,6 +6,8 @@ model.cpp ^
 texture.cpp ^
 texture_picking.cpp ^
 cam.cpp ^
+extrude_point.cpp ^
+shell_texture.cpp ^
 shapes/point.cpp ^
 shapes/sphere.cpp ^
 shapes/cube.cpp ^

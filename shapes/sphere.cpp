@@ -1,25 +1,27 @@
 #include "sphere.h"
 
-glm::vec3 Sphere::normalize(glm::vec3 a, glm::vec3 b, double length) {
-    glm::vec3 d = b - a;
-    glm::vec3 d2 = d * d;
-    double l = sqrt(d2.x + d2.y + d2.z);
-    d = d * (float)(length / l);
-    return a + d;
-}
-
 glm::vec3 Sphere::calcPoint(int i, int j, double& z_step, double& step, double& h, double& diameter, int& sign1, int& sign2, bool flip) {
     double z = cos(glm::radians(45.0f)) * i * z_step;
     double y = h - (sin(glm::radians(45.0f)) * i * step);
     double x = -((step * i) / 2.0);
     x = ((x + (step * j)) * sign1);
     z = z * sign1;
-    return normalize(glm::vec3(0.0f), glm::vec3(flip ? z : x, y * sign2, flip ? x : z), diameter);
+    return extrudePoint(glm::vec3(0.0f), glm::vec3(flip ? z : x, y * sign2, flip ? x : z), diameter);
 }
 
 Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : VertexArray() {
     this->pos = pos;
+
+    initialize(calcSphereBuffers(radius, pos, steps, color));
+}
+
+VAOBuffers Sphere::calcSphereBuffers(double radius, glm::vec3 pos, int steps, glm::vec3 color) {
     glm::vec3 center(0.0, 0.0, 0.0);
+
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec3> normals;
+
     double h = sqrt((radius * radius) * 2.0);
     double diameter = 2 * radius;
     double stepCount = steps;
@@ -89,7 +91,7 @@ Sphere::Sphere(double radius, glm::vec3 pos, int steps, glm::vec3 color) : Verte
         }
     }
 
-    initialize({ vertices, colors, normals });
+    return { vertices, colors, normals };
 }
 
 void Sphere::draw(int shaderProgram) {

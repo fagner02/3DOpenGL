@@ -2,7 +2,15 @@
 
 Cube::Cube(glm::vec3 pos, float size) {
     this->pos = pos;
+
+    initialize(calcCubeVertices(pos, size));
+}
+
+VAOBuffers Cube::calcCubeVertices(glm::vec3 pos, float size) {
     std::vector<unsigned int> indexes;
+    std::vector<glm::vec3> vertices;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec3> normals;
     std::vector<glm::vec2> uvs;
     struct point {
         int x, y;
@@ -45,7 +53,7 @@ Cube::Cube(glm::vec3 pos, float size) {
         }
     }
 
-    initialize({ vertices, colors, normals, uvs, indexes });
+    return { vertices, colors, normals, uvs, indexes };
 }
 
 void Cube::draw(int shaderProgram) {

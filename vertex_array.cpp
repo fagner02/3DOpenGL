@@ -17,6 +17,8 @@ void VertexArray::initialize(VAOBuffers buffers) {
     bool hasColors = buffers.colors.size() > 0;
     bool hasTexCoord = buffers.texCoord.size() > 0;
     glGenVertexArrays(1, &vao);
+    std::cout << " " << vao << "\n";
+
     attrNum = 1 + hasNormals + hasColors + hasTexCoord;
     glGenBuffers(attrNum, vbo);
     glBindVertexArray(vao);
@@ -44,6 +46,7 @@ void VertexArray::initialize(VAOBuffers buffers) {
     } else {
         bufferCount = buffers.coordinates.size() * sizeof(float);
     }
+    glBindVertexArray(0);
 }
 
 VertexArray::VertexArray(VAOBuffers buffers) {
