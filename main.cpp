@@ -180,11 +180,11 @@ int main() {
     Shader shellShader("./shaders/shell.vert", "./shaders/shell.frag");
 
     glm::vec3 lightPos(0.5, 0.5, 0.5);
-    // Cube sphere(glm::vec3(0.0, 0.0, -0.3), 0.4);
-    // Cube cube(lightPos, 0.05);
+    Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
+    Cube cube(lightPos, 0.05);
     // Plane plane(glm::vec3(0.0), 0.5);
-    // Model model;
-    // model.loadFile("./3ds/maclaren.3DS");
+    Model model;
+    model.loadFile("./3ds/skeleton.3DS");
     // std::vector<Plane> shells;
     // int shellNum = 100;
     // float shellHeight = 0.1;
@@ -192,7 +192,7 @@ int main() {
     //     shells.push_back(Plane(glm::vec3(0.0, ((float)i / shellNum) * shellHeight, 0.0), 1.0));
     // }
 
-    // Texture azulejo("./textures/azulejo.jpg");
+    Texture azulejo("./textures/refri.bmp");
     // Picking pickingTexture;
     // pickingTexture.init(width, height);
     glm::vec3 lightColor(1.0f);
@@ -200,7 +200,7 @@ int main() {
 
     // clipPlane.calculateClipPlane();
 
-    ShellTexture shellTexture(Plane::calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 0.3));
+    ShellTexture shellTexture(Sphere::calcSphereBuffers(0.3, glm::vec3(0.0, 0.0, -0.3), 5));
     // for (size_t i = 0; i < sphereBuffers.coordinates.size(); i++) {
     //     glm::vec3 normalPoint = normalize(glm::vec3(0.0), sphereBuffers.normals[i], 0.05);
 
@@ -257,7 +257,6 @@ int main() {
 
         defaultShader.useShader();
 
-        // azulejo.bindTexture();
         cam.applyMatrix(defaultShader.shaderProgram);
         cam.applyLightPos(defaultShader.shaderProgram, lightPos);
 
@@ -267,13 +266,16 @@ int main() {
             lightColor = glm::vec3(1.0, 0.5, 0.5);
         }
         cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-
+        //sphere.draw(defaultShader.shaderProgram);
         //plane.draw(defaultShader.shaderProgram);
         //cube2->draw(defaultShader.shaderProgram);
         // sphere.draw(defaultShader.shaderProgram);
         // glm::vec3 planeNormal(1.0, -1.0, 1.0);
         // planeNormal = glm::rotate(planeNormal, clipPlane.clipAngle, glm::vec3(0.0, 0.0, 1.0));
 
+        // sphere.applyMatrix(defaultShader.shaderProgram);
+        // sphere.draw(defaultShader.shaderProgram);
+        // model.draw();
         // glm::vec3 planePoint(0.0, clipPlane.planeHeight, 0.0);
         //std::cout << -glm::dot(planeNormal, planePoint) << "\n";
         // clipPlane.applyClipPlane(defaultShader.shaderProgram);
@@ -283,8 +285,7 @@ int main() {
 
         lightShader.useShader();
         cam.applyMatrix(lightShader.shaderProgram);
-        // cube.draw(lightShader.shaderProgram);
-        // pixel.Print();
+        cube.draw(lightShader.shaderProgram);
 
         lightless.useShader();
         cam.applyMatrix(lightless.shaderProgram);
@@ -314,7 +315,6 @@ int main() {
         // model.applyMatrix(defaultShader.shaderProgram);
         // model.draw();
 
-
         // vao.bindVAO();
     // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
     // frontFace.bindVAO();
@@ -332,7 +332,18 @@ int main() {
 
 
 
-        // textureShader.useShader();
+        textureShader.useShader();
+        azulejo.bindTexture();
+        cam.applyMatrix(shellShader.shaderProgram);
+        cam.applyLightPos(shellShader.shaderProgram, lightPos);
+
+        if (selected == 1) {
+            lightColor = glm::vec3(0.7, 0.5, 0.5);
+        } else {
+            lightColor = glm::vec3(1.0, 0.5, 0.5);
+        }
+        cam.applyLightColor(shellShader.shaderProgram, lightColor);
+        // sphere.draw(textureShader.shaderProgram);
 
 
         glfwSwapBuffers(window);

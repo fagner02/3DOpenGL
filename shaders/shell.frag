@@ -39,5 +39,5 @@ void main() {
     float diffuse = max(dot(normalize(normal), lightDirection), 0.0f);
     vec3 ccolor = vec3(b.y*0.2,b.x*0.8+0.2, b.x*0.2) *lightColor* (diffuse+0.2)* (1-radius);
     FragColor = vec4(ccolor, shellIndex <= ((b.x*0.8+0.2)*shellNum) && !r);
-    // FragColor = vec4(muv, 0.0,1.0);
+    // FragColor = vec4(uv, 0.0,1.0);
 }
