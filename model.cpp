@@ -2,8 +2,6 @@
 
 Model::Model() {}
 
-Model::~Model() {}
-
 VAOBuffers Model::getModelBuffers(const char* name) {
     Assimp::Importer importer;
 
@@ -16,15 +14,14 @@ VAOBuffers Model::getModelBuffers(const char* name) {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec3> colors;
     std::vector<glm::vec3> normals;
-    std::vector<unsigned int> indexes;
     std::vector<glm::vec2> uvs;
+    std::vector<unsigned int> indexes;
     unsigned int vertex = 0;
     unsigned int index = 0;
     unsigned int maxIndex = 0;
     unsigned int indexCount = 0;
 
     for (int i = 0;i < scene->mNumMeshes;i++) {
-        // vertices.
         meshes[i].baseVertex = vertex;
         meshes[i].baseIndex = index;
         meshes[i].indexNum = scene->mMeshes[i]->mNumFaces * 3;
@@ -34,6 +31,13 @@ VAOBuffers Model::getModelBuffers(const char* name) {
         aiVector3D* mVertices = scene->mMeshes[i]->mVertices;
         aiVector3D* mNormals = scene->mMeshes[i]->mNormals;
         aiVector3D** textureCoords = scene->mMeshes[i]->mTextureCoords;
+        int uvIndex = -1;
+        for (size_t k = 0; k < 8; k++) {
+            if (scene->mMeshes[i]->HasTextureCoords(k)) {
+                uvIndex = k;
+                break;
+            }
+        }
 
         for (int j = 0;j < scene->mMeshes[i]->mNumVertices; j++) {
             vertices.push_back(glm::vec3(mVertices[j].x, mVertices[j].y, mVertices[j].z) * 0.001f);
@@ -41,9 +45,11 @@ VAOBuffers Model::getModelBuffers(const char* name) {
             aiColor3D color(0.f, 0.f, 0.f);
             scene->mMaterials[scene->mMeshes[i]->mMaterialIndex]->Get(AI_MATKEY_COLOR_DIFFUSE, color);
             normals.push_back(glm::vec3(mNormals[j].x, mNormals[j].y, mNormals[j].z));
-            uvs.push_back(glm::vec2(textureCoords[0][j].x, textureCoords[0][j].y));
+            if (uvIndex > -1)
+                uvs.push_back(glm::vec2(textureCoords[uvIndex][j].x, textureCoords[uvIndex][j].y));
             colors.push_back(glm::vec3(color.r, color.g, color.b));
         }
+
         for (int j = 0;j < scene->mMeshes[i]->mNumFaces; j++) {
             assert(scene->mMeshes[i]->mFaces[j].mNumIndices == 3);
             for (int k = 0;k < 3; k++) {
@@ -56,6 +62,7 @@ VAOBuffers Model::getModelBuffers(const char* name) {
             }
         }
     }
+
     return { vertices, colors, normals, uvs, indexes };
 }
 
@@ -64,10 +71,6 @@ void Model::loadFile(const char* name) {
     initialize(getModelBuffers(name));
     // loadTextures(scene);
     // delete scene;
-}
-
-void Model::CreateLightList() {
-
 }
 
 void Model::loadTextures(const aiScene* scene) {
@@ -91,18 +94,7 @@ void Model::draw() {
 
     bindVAO();
     for (int i = 0;i < meshes.size();i++) {
-        // std::cout << "draw\n" <<
-        //     meshes[i].indexNum << " " << meshes[i].baseIndex << " " << meshes[i].baseVertex << "\n";
         // textures[meshes[i].materialIndex].bindTexture();
         glDrawElementsBaseVertex(GL_TRIANGLES, meshes[i].indexNum, GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * meshes[i].baseIndex), meshes[i].baseVertex);
-        // std::cout << glGetError();
-        // std::cout << "drawout\n";
     }
-}
-
-void Model::EnableLights() {
-}
-
-void Model::DisableLights() {
-
 }

@@ -181,26 +181,21 @@ int main() {
 
     glm::vec3 lightPos(0.5, 0.5, 1.5);
     Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
+    Cube cube3(glm::vec3(-0.5, 0.0, 0.3), 0.2);
     Cube cube(lightPos, 0.05);
-    // Plane plane(glm::vec3(0.0), 0.5);
+
     Model model;
     model.loadFile("./3ds/maclaren.3ds");
-    // std::vector<Plane> shells;
-    // int shellNum = 100;
-    // float shellHeight = 0.1;
-    // for (size_t i = 0; i < shellNum; i++) {
-    //     shells.push_back(Plane(glm::vec3(0.0, ((float)i / shellNum) * shellHeight, 0.0), 1.0));
-    // }
 
     Texture azulejo("./textures/refri.bmp");
-    // Picking pickingTexture;
-    // pickingTexture.init(width, height);
+    Picking pickingTexture;
+    pickingTexture.init(width, height);
     glm::vec3 lightColor(1.0f);
     unsigned int selected = 0;
 
-    // clipPlane.calculateClipPlane();
-
-    ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 100, model.meshes);
+    ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 70, model.meshes);
+    pickingTexture.objs.push_back(&sphere);
+    pickingTexture.objs.push_back(&cube3);
     // for (size_t i = 0; i < sphereBuffers.coordinates.size(); i++) {
     //     glm::vec3 normalPoint = normalize(glm::vec3(0.0), sphereBuffers.normals[i], 0.05);
 
@@ -232,27 +227,29 @@ int main() {
     // cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
     while (!glfwWindowShouldClose(window)) {
         // if (inn) continue;
-        // pickingTexture.enableWriting();
+        pickingTexture.enableWriting();
 
-        // glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // picking.useShader();
-
-        // cam.applyMatrix(picking.shaderProgram);
-
-        // pickingTexture.disableWriting();
-
-        // PixelInfo pixel = pickingTexture.ReadPixel(mousePos.x, height - mousePos.y, 1, 1);
-
-        // if (!down && click) {
-        //     // std::cout << pixel.ObjectID << "\n";
-        //     // selected = pixel.ObjectID;
-        //     click = false;
-        // }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // pickingTexture.applyIndex(picking.shaderProgram, 1);
-        // glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
+        picking.useShader();
+
+        cam.applyMatrix(picking.shaderProgram);
+
+        for (size_t i = 1; i <= pickingTexture.objs.size(); i++) {
+            pickingTexture.applyIndex(picking.shaderProgram, i);
+            pickingTexture.objs[i - 1]->draw(picking.shaderProgram);
+        }
+
+        pickingTexture.disableWriting();
+
+        if (!down && click) {
+            PixelInfo pixel = pickingTexture.ReadPixel(mousePos.x, height - mousePos.y);
+            selected = pixel.ObjectID;
+            click = false;
+            std::cout << pixel.ObjectID << "\n";
+        }
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.5, 0.2, 0.3, 1);
 
         defaultShader.useShader();
@@ -273,8 +270,14 @@ int main() {
         // glm::vec3 planeNormal(1.0, -1.0, 1.0);
         // planeNormal = glm::rotate(planeNormal, clipPlane.clipAngle, glm::vec3(0.0, 0.0, 1.0));
 
-        // sphere.applyMatrix(defaultShader.shaderProgram);
         // sphere.draw(defaultShader.shaderProgram);
+        if (selected == 2) {
+            lightColor = glm::vec3(0.7, 0.5, 0.5);
+        } else {
+            lightColor = glm::vec3(1.0, 0.5, 0.5);
+        }
+        cam.applyLightColor(defaultShader.shaderProgram, lightColor);
+        // cube3.draw(defaultShader.shaderProgram);
         // model.applyMatrix(defaultShader.shaderProgram);
         // model.draw();
         // glm::vec3 planePoint(0.0, clipPlane.planeHeight, 0.0);
@@ -293,7 +296,6 @@ int main() {
         // for (size_t i = 0; i < lines.size(); i++) {
         //     // lines[i].draw(lightless.shaderProgram);
         //     // lines1[i].draw(lightless.shaderProgram);
-        //     // cout << "7fgyuinom";
         //     // lines2[i].draw(lightless.shaderProgram);
         // }
         glLineWidth(9);

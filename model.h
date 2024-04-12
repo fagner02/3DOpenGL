@@ -28,15 +28,8 @@ class Model : public VertexArray {
 public:
     std::vector<Mesh> meshes;
     Model();
-    ~Model();
 
     void loadFile(const char* name);
-
-    void CreateLightList();
-
-    void EnableLights();
-
-    void DisableLights();
 
     void draw();
 

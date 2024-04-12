@@ -25,7 +25,7 @@ VAOBuffers Sphere::calcSphereBuffers(double radius, glm::vec3 pos, int steps, gl
     double z_step = h / stepCount;
     int vnum = 8 * ((3 * stepCount) * (stepCount));
     int vindex = 0;
-    std::cout << stepCount << " " << vnum << " ";
+
     std::vector<glm::vec3> vertices(vnum, glm::vec3(0.0));
     std::vector<glm::vec3> colors(vnum, glm::vec3(0.0));
     std::vector<glm::vec3> normals(vnum, glm::vec3(0.0));
@@ -112,7 +112,6 @@ VAOBuffers Sphere::calcSphereBuffers(double radius, glm::vec3 pos, int steps, gl
             }
         }
     }
-    std::cout << vertices.size();
 
     return { vertices, colors, normals, uvs };
 }

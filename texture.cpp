@@ -18,12 +18,9 @@ Texture::Texture(const char* filename) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // ilDeleteImage(image);
     glBindTexture(GL_TEXTURE_2D, 0);
-    std::cout << "out\n";
-    std::cout << glGetError() << "\n";
-    stbi_image_free(data);
 
+    stbi_image_free(data);
 }
 
 void Texture::bindTexture() {

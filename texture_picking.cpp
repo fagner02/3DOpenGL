@@ -17,7 +17,6 @@ Picking::~Picking() {
 }
 
 void Picking::init(unsigned int width, unsigned int height) {
-    // Create the FBO
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -29,7 +28,6 @@ void Picking::init(unsigned int width, unsigned int height) {
     // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingTexture, 0);
 
-    // // Create the texture object for the depth buffer
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
@@ -42,7 +40,6 @@ void Picking::init(unsigned int width, unsigned int height) {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
     glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
 
-    // Verify that the FBO is correct
     GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
     if (Status != GL_FRAMEBUFFER_COMPLETE) {
@@ -50,29 +47,23 @@ void Picking::init(unsigned int width, unsigned int height) {
         exit(1);
     }
 
-    // Restore the default framebuffer
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
-
 
 void Picking::enableWriting() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 }
 
-
 void Picking::disableWriting() {
-    // Bind back the default framebuffer
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-
-PixelInfo Picking::ReadPixel(unsigned int x, unsigned int y, unsigned int width, unsigned int height) {
+PixelInfo Picking::ReadPixel(unsigned int x, unsigned int y) {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
 
     glReadBuffer(GL_COLOR_ATTACHMENT0);
 
-    // unsigned int pixel[4];
     PixelInfo pixel;
     glReadPixels(x, y, 1, 1, GL_RGBA_INTEGER, GL_INT, &pixel);
 
@@ -85,5 +76,5 @@ PixelInfo Picking::ReadPixel(unsigned int x, unsigned int y, unsigned int width,
 
 void Picking::applyIndex(int shaderProgram, int index) {
     int loc = glGetUniformLocation(shaderProgram, "gObjectIndex");
-    glUniform1ui(loc, 1);
+    glUniform1ui(loc, index);
 }
