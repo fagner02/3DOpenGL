@@ -1,4 +1,5 @@
-g++ -std=c++17 -w -L./lib -I./include ^
+:: run with mingw32 from msys64 ::::::::::::::::::::::::::::::::::::::::::
+C:\msys64\mingw32\bin\g++ -std=c++17 -w -L./lib -I./include ^
 main.cpp ^
 clip_plane.cpp ^
 shapes/plane.cpp ^
