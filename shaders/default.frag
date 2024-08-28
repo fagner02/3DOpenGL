@@ -11,6 +11,6 @@ uniform vec3 lightColor;
 void main() {
     vec3 lightDirection = normalize(lightPos - pos);
     float diffuse = max(dot(normalize(normal), lightDirection), 0.0f);
-    vec3 ccolor =  color * lightColor * (diffuse + 0.2);
+    vec3 ccolor =  color * lightColor * (diffuse + 0.4);
     FragColor = vec4(ccolor, 1.0);
 }

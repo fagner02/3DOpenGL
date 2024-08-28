@@ -72,8 +72,10 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     }
 
     if (right_pressed) {
+        cam.up = glm::vec3(0, 1, 0);
         cam.pos = glm::rotate(cam.pos, glm::radians((float)(-(xpos - mousePos.x))), cam.up);
         cam.pos = glm::rotate(cam.pos, glm::radians((float)(-(ypos - mousePos.y))), glm::cross(cam.up, cam.pos));
+        cam.up = cam.up;
         cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(xpos - mousePos.x))), cam.up);
         cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(ypos - mousePos.y))), glm::cross(cam.up, cam.pos));
         cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
@@ -86,7 +88,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     cam.view = glm::translate(cam.view, glm::vec3(xoffset, yoffset, 0.0));
 }
-// ClipPlane clipPlane;
+ClipPlane clipPlane;
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 
     if (key == GLFW_KEY_LEFT) {
@@ -114,21 +116,22 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         cam.pos -= 0.1f * glm::normalize(cam.orientation);
     }
     // cam.up = glm::cross(cam.pos, cam.orientation);
-    // if (key == GLFW_KEY_A) {
-    //     clipPlane.clipAngle += 0.1;
-    // }
-    // if (key == GLFW_KEY_D) {
-    //     clipPlane.clipAngle -= 0.1;
-    // }
+    if (key == GLFW_KEY_A) {
+        clipPlane.clipAngle += 0.1;
+    }
+    if (key == GLFW_KEY_D) {
+        clipPlane.clipAngle -= 0.1;
+    }
     // cam.up = glm::abs(glm::cross(glm::abs(glm::cross(glm::vec3(0.0, 1.0, 0.0), cam.pos)), cam.pos));
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         follow_cursor = !follow_cursor;
     }
     cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
-    // clipPlane.calculateClipPlane();
+    clipPlane.calculateClipPlane();
 }
 
 void window_size_callback(GLFWwindow* window, int _width, int _height) {
+    if (_height == 0) return;
     height = _height;
     width = _width;
     cam.proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
@@ -146,6 +149,30 @@ void printVec3(glm::vec3 vec) {
 }
 
 int main() {
+    glm::mat4 mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    // glm::mat4 mat = glm::mat4(
+    //     0, -1, 0, 0,
+    //     1, 0, 0, 0,
+    //     0, 0, 1, 0,
+    //     0, 0, 0, 1) *
+    //     glm::mat4(
+    //         1, 0, 0, 3,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1
+    //     );
+
+    // glm::vec3 eye = glm::vec3(0, 1, 0);
+    // glm::vec3 center = glm::vec3(1, 2, 1);
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4;j++) {
+            std::cout << std::fixed << mat[i][j] << ", ";
+        }
+        std::cout << "\n";
+    }
+    glm::vec4 res = mat * glm::vec4(1, 1, 1, 1);
+    std::cout << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3];
+
     if (!glfwInit()) {
         std::cout << "erro";
         return -1;
@@ -181,8 +208,9 @@ int main() {
 
     glm::vec3 lightPos(0.5, 0.5, 1.5);
     Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
-    Cube cube3(glm::vec3(-0.5, 0.0, 0.3), 0.2);
+    Cube cube3(glm::vec3(0.0, 0.0, -0.3), 2.5);
     Cube cube(lightPos, 0.05);
+    Plane floor(glm::vec3(0.0, 0.0, -0.3), 2.5);
 
     Model model;
     model.loadFile("./3ds/maclaren.3ds");
@@ -190,51 +218,24 @@ int main() {
     Texture azulejo("./textures/refri.bmp");
     Picking pickingTexture;
     pickingTexture.init(width, height);
-    glm::vec3 lightColor(1.0f);
+    glm::vec3 lightColor(0.5, 0.9, 0.5);
     unsigned int selected = 0;
 
-    ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 70, model.meshes);
+    // ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 70, model.meshes);
+    ShellTexture shellTexture(floor.calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 2.5), 50, 0.2, 70);
     pickingTexture.objs.push_back(&sphere);
     pickingTexture.objs.push_back(&cube3);
-    // for (size_t i = 0; i < sphereBuffers.coordinates.size(); i++) {
-    //     glm::vec3 normalPoint = normalize(glm::vec3(0.0), sphereBuffers.normals[i], 0.05);
+    pickingTexture.objs.push_back(&floor);
 
-    //     glm::vec3 newPoint = normalPoint;
-
-    //     sphereBuffers.coordinates.push_back(glm::vec3(0.0) + sphereBuffers.pos);
-    //     sphereBuffers.coordinates.push_back(sphereBuffers.normals[i] + sphereBuffers.pos);
-    //     sphereBuffers.coordinates.push_back(glm::vec3(0.0) + sphereBuffers.pos);
-    //     sphereBuffers.coordinates.push_back(normalPoint);
-    //     sphereBuffers.coordinates.push_back(sphere.pos);
-    //     sphereBuffers.coordinates.push_back(sphereBuffers.coordinates[i]);
-    //     sphereBuffers.coordinates.push_back(sphereBuffers.coordinates[i]);
-    //     sphereBuffers.coordinates.push_back(sphereBuffers.coordinates[i] + newPoint);
-    //     colors.push_back(glm::vec3(0.2, 0.2, 0.8));
-    //     colors.push_back(colors.back() * 0.2f);
-    //     colors.push_back(glm::vec3(0.2, 0.8, 0.2));
-    //     colors.push_back(colors.back() * 0.2f);
-    //     colors.push_back(glm::vec3(0.9, 0.8, 0.9));
-    //     colors.push_back(colors.back() * 0.2f);
-    //     colors.push_back(glm::vec3(0.9, 0.0, 0.0));
-    //     colors.push_back(colors.back() * 0.2f);
-    // }
-    // Lines lines2(sphereBuffers.coordinates, colors);
-    // printVec3(sphereBuffers.vertices[0]);
-    // std::cout << "\n";
-    // printVec3(sphereBuffers.normals[0] + sphereBuffers.vertices[0]);
-    // std::cout << "\n";
-    // std::cout << glm::dot(sphereBuffers.normals[0], sphereBuffers.vertices[0]);
-    // cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
+    cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
     while (!glfwWindowShouldClose(window)) {
-        // if (inn) continue;
         pickingTexture.enableWriting();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         picking.useShader();
-
         cam.applyMatrix(picking.shaderProgram);
-
+        clipPlane.applyClipPlane(picking.shaderProgram);
         for (size_t i = 1; i <= pickingTexture.objs.size(); i++) {
             pickingTexture.applyIndex(picking.shaderProgram, i);
             pickingTexture.objs[i - 1]->draw(picking.shaderProgram);
@@ -254,38 +255,26 @@ int main() {
 
         defaultShader.useShader();
 
-        cam.applyMatrix(defaultShader.shaderProgram);
-        cam.applyLightPos(defaultShader.shaderProgram, lightPos);
+        for (int i = 0; i < pickingTexture.objs.size();i++) {
+            if (selected == i + 1) {
+                lightColor = glm::vec3(1, 0.5, 0.5);
+            } else {
+                lightColor = glm::vec3(1, 1, 1);
+            }
 
-        if (selected == 1) {
-            lightColor = glm::vec3(0.7, 0.5, 0.5);
-        } else {
-            lightColor = glm::vec3(1.0, 0.5, 0.5);
+            cam.applyMatrix(defaultShader.shaderProgram);
+            cam.applyLightPos(defaultShader.shaderProgram, lightPos);
+            cam.applyLightColor(defaultShader.shaderProgram, lightColor);
+            clipPlane.applyClipPlane(defaultShader.shaderProgram);
+            pickingTexture.objs[i]->draw(defaultShader.shaderProgram);
         }
-        cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-        //sphere.draw(defaultShader.shaderProgram);
-        //plane.draw(defaultShader.shaderProgram);
-        //cube2->draw(defaultShader.shaderProgram);
-        // sphere.draw(defaultShader.shaderProgram);
-        // glm::vec3 planeNormal(1.0, -1.0, 1.0);
-        // planeNormal = glm::rotate(planeNormal, clipPlane.clipAngle, glm::vec3(0.0, 0.0, 1.0));
+        lightColor = glm::vec3(1, 1, 1);
 
-        // sphere.draw(defaultShader.shaderProgram);
-        if (selected == 2) {
-            lightColor = glm::vec3(0.7, 0.5, 0.5);
-        } else {
-            lightColor = glm::vec3(1.0, 0.5, 0.5);
-        }
-        cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-        // cube3.draw(defaultShader.shaderProgram);
-        // model.applyMatrix(defaultShader.shaderProgram);
-        // model.draw();
-        // glm::vec3 planePoint(0.0, clipPlane.planeHeight, 0.0);
-        //std::cout << -glm::dot(planeNormal, planePoint) << "\n";
-        // clipPlane.applyClipPlane(defaultShader.shaderProgram);
-        // cube2.applyMatrix(defaultShader.shaderProgram);
-        // cube2.bindVAO();
-        // glDrawElements(GL_TRIANGLES, cube2.bufferCount, GL_UNSIGNED_INT, 0);
+        shellShader.useShader();
+        cam.applyMatrix(shellShader.shaderProgram);
+        cam.applyLightPos(shellShader.shaderProgram, lightPos);
+        cam.applyLightColor(shellShader.shaderProgram, lightColor);
+        shellTexture.draw(shellShader.shaderProgram);
 
         lightShader.useShader();
         cam.applyMatrix(lightShader.shaderProgram);
@@ -293,61 +282,22 @@ int main() {
 
         lightless.useShader();
         cam.applyMatrix(lightless.shaderProgram);
-        // for (size_t i = 0; i < lines.size(); i++) {
-        //     // lines[i].draw(lightless.shaderProgram);
-        //     // lines1[i].draw(lightless.shaderProgram);
-        //     // lines2[i].draw(lightless.shaderProgram);
-        // }
+
         glLineWidth(9);
 
-        // Line line(glm::vec3(0.0), glm::abs(glm::cross(cam.up, glm::vec3(cam.pos.x, 0.0, cam.pos.z))));
-        // line.draw(lightless.shaderProgram);
-
-
-        shellShader.useShader();
-        cam.applyMatrix(shellShader.shaderProgram);
-        cam.applyLightPos(shellShader.shaderProgram, lightPos);
-
-        if (selected == 1) {
-            lightColor = glm::vec3(0.7, 0.5, 0.5);
-        } else {
-            lightColor = glm::vec3(1.0, 0.5, 0.5);
-        }
-        cam.applyLightColor(shellShader.shaderProgram, lightColor);
-        shellTexture.draw(shellShader.shaderProgram);
-        // model.applyMatrix(defaultShader.shaderProgram);
-        // model.draw();
-
-        // vao.bindVAO();
-    // glDrawElements(GL_TRIANGLES, vao.bufferCount, GL_UNSIGNED_INT, 0);
-    // frontFace.bindVAO();
-    // glDrawElements(GL_TRIANGLES, frontFace.bufferCount, GL_UNSIGNED_INT, 0);
-
-    // lightless.useShader();
-    // cam.applyMatrix(lightless.shaderProgram);
-
-    // line.bindVAO();
-    // glDrawArrays(GL_LINES, 0, line.bufferCount);
-    // line1.bindVAO();
-    // glDrawArrays(GL_LINES, 0, line1.bufferCount);
-    // line2.bindVAO();
-    // glDrawArrays(GL_LINES, 0, line2.bufferCount);
-
-
+        Line line(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
+        line.draw(lightless.shaderProgram);
+        Line line1(glm::vec3(0, 0, 0), glm::vec3(0.5, 1, -0.5));
+        line1.draw(lightless.shaderProgram);
+        Line line2(glm::vec3(0, 0, -1), glm::vec3(0.5, 1, -0.5));
+        line2.draw(lightless.shaderProgram);
+        Line line3(glm::vec3(0, 0, 0), glm::vec3(-1, 0.5, 0));
+        line3.draw(lightless.shaderProgram);
 
         textureShader.useShader();
         azulejo.bindTexture();
         cam.applyMatrix(shellShader.shaderProgram);
         cam.applyLightPos(shellShader.shaderProgram, lightPos);
-
-        if (selected == 1) {
-            lightColor = glm::vec3(0.7, 0.5, 0.5);
-        } else {
-            lightColor = glm::vec3(1.0, 0.5, 0.5);
-        }
-        cam.applyLightColor(shellShader.shaderProgram, lightColor);
-        // sphere.draw(textureShader.shaderProgram);
-
 
         glfwSwapBuffers(window);
         glfwWaitEvents();

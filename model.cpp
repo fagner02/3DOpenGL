@@ -90,8 +90,8 @@ void Model::loadTextures(const aiScene* scene) {
     }
 }
 
-void Model::draw() {
-
+void Model::draw(int shaderProgram) {
+    applyMatrix(shaderProgram);
     bindVAO();
     for (int i = 0;i < meshes.size();i++) {
         // textures[meshes[i].materialIndex].bindTexture();

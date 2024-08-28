@@ -1,7 +1,6 @@
 #include "plane.h"
 
 Plane::Plane(glm::vec3 pos, float length) {
-
     initialize(calcPlaneBuffers(pos, length));
 }
 

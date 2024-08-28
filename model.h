@@ -31,7 +31,7 @@ public:
 
     void loadFile(const char* name);
 
-    void draw();
+    void draw(int shaderProgram);
 
     void loadTextures(const aiScene* scene);
 

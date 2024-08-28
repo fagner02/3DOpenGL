@@ -15,6 +15,8 @@ public:
     bool hasIndexes;
 
     ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, int divisions, std::vector<Mesh> modelMeshes);
-
+    ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, int divisions);
+    void initialize(VAOBuffers buffers, int shellNum, float shellHeight, int divisions);
     void draw(int shaderProgram);
+    VertexArray* getFirstShell();
 };

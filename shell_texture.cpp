@@ -1,7 +1,6 @@
 #include "shell_texture.h"
 
-ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, int divisions, std::vector<Mesh> modelMeshes) {
-    this->modelMeshes = modelMeshes;
+void ShellTexture::initialize(VAOBuffers buffers, int shellNum, float shellHeight, int divisions) {
     this->shellNum = shellNum;
     this->shellHeight = shellHeight;
     this->divisions = divisions;
@@ -17,7 +16,18 @@ ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, 
         buffers.coordinates = vertices;
     }
 }
+ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, int divisions, std::vector<Mesh> modelMeshes) {
+    this->modelMeshes = modelMeshes;
+    initialize(buffers, shellNum, shellHeight, divisions);
+}
 
+ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight, int divisions) {
+    this->modelMeshes = std::vector<Mesh>();
+    initialize(buffers, shellNum, shellHeight, divisions);
+}
+VertexArray* ShellTexture::getFirstShell() {
+    return meshes[0];
+}
 void ShellTexture::draw(int shaderProgram) {
     int dloc = glGetUniformLocation(shaderProgram, "divisions");
     glUniform1f(dloc, divisions);
@@ -39,7 +49,5 @@ void ShellTexture::draw(int shaderProgram) {
         } else {
             glDrawArrays(GL_TRIANGLES, 0, meshes[i]->bufferCount);
         }
-
-
     }
 }
