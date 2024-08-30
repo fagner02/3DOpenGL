@@ -1,7 +1,7 @@
 #include "cam.h"
 
 Camera::Camera(float width, float height) {
-    proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
+    proj = glm::perspective(glm::radians(90.0f), (float)(width / height), 0.1f, 100.0f);
     view = glm::lookAt(pos, pos + orientation, up);
 }
 

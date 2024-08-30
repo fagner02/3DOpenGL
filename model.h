@@ -6,6 +6,7 @@
 #include <windows.h>
 #endif
 
+#include <assimp/Exporter.hpp>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -26,10 +27,13 @@ struct Mesh {
 
 class Model : public VertexArray {
 public:
+    std::string filename;
     std::vector<Mesh> meshes;
     Model();
 
     void loadFile(const char* name);
+
+    void saveFile(std::string destfile, glm::mat4 transform);
 
     void draw(int shaderProgram);
 

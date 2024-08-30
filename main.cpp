@@ -57,6 +57,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 Cube* cube2 = nullptr;
+
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
     if (down) {
         click = false;
@@ -149,7 +150,8 @@ void printVec3(glm::vec3 vec) {
 }
 
 int main() {
-    glm::mat4 mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    // glm::mat4 mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+    glm::mat4 mat = glm::identity<glm::mat4>();
     // glm::mat4 mat = glm::mat4(
     //     0, -1, 0, 0,
     //     1, 0, 0, 0,
@@ -214,7 +216,12 @@ int main() {
 
     Model model;
     model.loadFile("./3ds/maclaren.3ds");
+    Model ant;
+    ant.loadFile("./3ds/ant2.obj");
 
+    glm::mat4 modelMatrix = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2000.0, 2000.0, 2000.0)), (float)glm::radians(-90.0), glm::vec3(1.0, 0.0, 0.0)) +
+        glm::translate(glm::vec3(0, 0.5, 0));
+    //ant.saveFile("./3ds/ant2.obj", modelMatrix);
     Texture azulejo("./textures/refri.bmp");
     Picking pickingTexture;
     pickingTexture.init(width, height);
@@ -223,9 +230,10 @@ int main() {
 
     // ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 70, model.meshes);
     ShellTexture shellTexture(floor.calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 2.5), 50, 0.2, 70);
-    pickingTexture.objs.push_back(&sphere);
-    pickingTexture.objs.push_back(&cube3);
-    pickingTexture.objs.push_back(&floor);
+    // pickingTexture.objs.push_back(&sphere);
+    // pickingTexture.objs.push_back(&cube3);
+    // pickingTexture.objs.push_back(&floor);
+    pickingTexture.objs.push_back(&ant);
 
     cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
     while (!glfwWindowShouldClose(window)) {

@@ -4,7 +4,6 @@ Model::Model() {}
 
 VAOBuffers Model::getModelBuffers(const char* name) {
     Assimp::Importer importer;
-
     const aiScene* scene = importer.ReadFile(name, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
     if (scene == nullptr) {
         std::cout << "Couldn't load model: " << name << "\n";
@@ -67,10 +66,36 @@ VAOBuffers Model::getModelBuffers(const char* name) {
 }
 
 void Model::loadFile(const char* name) {
-
     initialize(getModelBuffers(name));
+    filename = std::string(name);
     // loadTextures(scene);
     // delete scene;
+}
+
+void Model::saveFile(std::string destfile, glm::mat4 transform) {
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+    if (scene == nullptr) {
+        std::cout << "Couldn't load model: " << filename << "\n";
+    }
+
+    for (int i = 0;i < scene->mNumMeshes;i++) {
+        for (int j = 0;j < scene->mMeshes[i]->mNumVertices; j++) {
+            glm::vec4 res = transform * glm::vec4(
+                scene->mMeshes[i]->mVertices[j].x,
+                scene->mMeshes[i]->mVertices[j].y,
+                scene->mMeshes[i]->mVertices[j].z,
+                1
+            );
+            scene->mMeshes[i]->mVertices[j].x = res.x;
+            scene->mMeshes[i]->mVertices[j].y = res.y;
+            scene->mMeshes[i]->mVertices[j].z = res.z;
+        }
+    }
+
+    Assimp::Exporter exporter;
+    std::string format = destfile.substr(destfile.find_last_of(".") + 1);
+    aiReturn res = exporter.Export(scene, format, destfile);
 }
 
 void Model::loadTextures(const aiScene* scene) {
