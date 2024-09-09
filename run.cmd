@@ -14,5 +14,5 @@ shapes/sphere.cpp ^
 shapes/cube.cpp ^
 shapes/line.cpp ^
 shaders/shader.cpp ^
-vertex_array.cpp -o ./build/main.exe build/glut32.dll -lopengl32 -lglext -lglfw3dll -lassimp
+vertex_array.cpp -o ./build/main.exe -lglext -lglfw3dll -lassimp
 .\build\main

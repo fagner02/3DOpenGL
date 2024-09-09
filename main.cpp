@@ -91,7 +91,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 ClipPlane clipPlane;
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-
     if (key == GLFW_KEY_LEFT) {
         cam.pos += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
         // cam.up += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
@@ -151,7 +150,8 @@ void printVec3(glm::vec3 vec) {
 
 int main() {
     // glm::mat4 mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    glm::mat4 mat = glm::identity<glm::mat4>();
+    glm::mat4 mat = glm::orthoZO<double>(-1, 1.0, -1.0, 1.0, 0.1, 100.0);
+
     // glm::mat4 mat = glm::mat4(
     //     0, -1, 0, 0,
     //     1, 0, 0, 0,
@@ -187,6 +187,7 @@ int main() {
     if (window == NULL) {
         cout << "erro";
     }
+
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     glfwSetScrollCallback(window, scroll_callback);
@@ -207,20 +208,45 @@ int main() {
     Shader picking("./shaders/picking.vert", "./shaders/picking.frag");
     Shader textureShader("./shaders/texture.vert", "./shaders/texture.frag");
     Shader shellShader("./shaders/shell.vert", "./shaders/shell.frag");
+    Shader shadowShader("./shaders/shadow.vert", "./shaders/shadow.frag");
 
     glm::vec3 lightPos(0.5, 0.5, 1.5);
     Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
-    Cube cube3(glm::vec3(0.0, 0.0, -0.3), 2.5);
+    Cube cube3(glm::vec3(0.0, 0.2, -0.3), 0.2);
     Cube cube(lightPos, 0.05);
     Plane floor(glm::vec3(0.0, 0.0, -0.3), 2.5);
+
+    glm::mat4 lightProj = glm::orthoZO<double>(-1, 1, -1, 1, 0.1, 100);
+
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+
+    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+        SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    Camera shadowCam(SHADOW_WIDTH, SHADOW_HEIGHT, lightPos);
+    shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
 
     Model model;
     model.loadFile("./3ds/maclaren.3ds");
     Model ant;
     ant.loadFile("./3ds/ant2.obj");
 
-    glm::mat4 modelMatrix = glm::rotate(glm::scale(glm::identity<glm::mat4>(), glm::vec3(2000.0, 2000.0, 2000.0)), (float)glm::radians(-90.0), glm::vec3(1.0, 0.0, 0.0)) +
-        glm::translate(glm::vec3(0, 0.5, 0));
     //ant.saveFile("./3ds/ant2.obj", modelMatrix);
     Texture azulejo("./textures/refri.bmp");
     Picking pickingTexture;
@@ -231,8 +257,8 @@ int main() {
     // ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 70, model.meshes);
     ShellTexture shellTexture(floor.calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 2.5), 50, 0.2, 70);
     // pickingTexture.objs.push_back(&sphere);
-    // pickingTexture.objs.push_back(&cube3);
-    // pickingTexture.objs.push_back(&floor);
+    pickingTexture.objs.push_back(&cube3);
+    pickingTexture.objs.push_back(&floor);
     pickingTexture.objs.push_back(&ant);
 
     cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
@@ -258,11 +284,25 @@ int main() {
             std::cout << pixel.ObjectID << "\n";
         }
 
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        shadowShader.useShader();
+
+        for (int i = 0; i < pickingTexture.objs.size();i++) {
+            shadowCam.applyMatrix(shadowShader.shaderProgram);
+            pickingTexture.objs[i]->draw(shadowShader.shaderProgram);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.5, 0.2, 0.3, 1);
 
         defaultShader.useShader();
-
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
         for (int i = 0; i < pickingTexture.objs.size();i++) {
             if (selected == i + 1) {
                 lightColor = glm::vec3(1, 0.5, 0.5);
@@ -273,7 +313,10 @@ int main() {
             cam.applyMatrix(defaultShader.shaderProgram);
             cam.applyLightPos(defaultShader.shaderProgram, lightPos);
             cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-            clipPlane.applyClipPlane(defaultShader.shaderProgram);
+
+            cam.applyLightProj(defaultShader.shaderProgram, shadowCam.proj * shadowCam.view);
+
+            // clipPlane.applyClipPlane(defaultShader.shaderProgram);
             pickingTexture.objs[i]->draw(defaultShader.shaderProgram);
         }
         lightColor = glm::vec3(1, 1, 1);
@@ -282,7 +325,7 @@ int main() {
         cam.applyMatrix(shellShader.shaderProgram);
         cam.applyLightPos(shellShader.shaderProgram, lightPos);
         cam.applyLightColor(shellShader.shaderProgram, lightColor);
-        shellTexture.draw(shellShader.shaderProgram);
+        // shellTexture.draw(shellShader.shaderProgram);
 
         lightShader.useShader();
         cam.applyMatrix(lightShader.shaderProgram);
