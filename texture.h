@@ -10,5 +10,5 @@ class Texture {
     unsigned int texture = 0;
 public:
     Texture(const char* filename);
-    void bindTexture();
+    void bindTexture(int shaderProgram);
 };

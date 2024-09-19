@@ -1,14 +1,14 @@
 #include "cam.h"
 
-Camera::Camera(float width, float height, glm::vec3 pos) {
-    proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
+Camera::Camera(float width, float height, glm::vec3 _pos) {
+    pos = _pos;
+    proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 10.0f);
     // glm::mat4 i = glm::scale(glm::identity<glm::mat4>(), glm::vec3(0.5, 0.5, 1.));
-    // std::cout << pos.y << " " << pos.z << "\n";
-    // if (pos.y == 0.1 && pos.z == 2.0) {
-    // proj = (glm::mat4)glm::orthoZO<double>(-1, 1, -1, 1, 0.1, 100);
+    // glm::mat4 mat = glm::transpose(glm::ortho<double>(4, 5, -1.0, 1.0, 0.1, 10));
+    // if (pos.z == 2.0) {
+    //     proj = (glm::mat4)glm::orthoZO<double>(-1, 1, -1, 1, 0.1, 10);
     // } else {
-    // proj = (glm::mat4)glm::ortho<double>(-1, 1, -1, 1, 0.1, 100);
-    // proj[2][2] = 0.5;
+    //     proj = glm::translate((glm::mat4)glm::orthoZO<double>(-1, 1, -1, 1, 0.1, 10), glm::vec3(0.1, 0.1, -0.1));
     // }
     // proj = i * glm::shear((glm::mat4)glm::orthoZO(-1., 1., -1., 1., 0.1, 100.), glm::vec3(0., 0., 0.),
     //     glm::vec2(0., cos(2) * 1.0 / tan(2)),

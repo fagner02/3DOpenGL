@@ -8,7 +8,7 @@ out vec3 color;
 out vec3 normal;
 out vec3 pos;
 out vec4 posLight;
-out vec2 texCoords;
+out vec2 texCoord;
 
 uniform mat4 model;
 uniform mat4 proj;
@@ -22,7 +22,7 @@ void main(){
     color = aColor;
     normal = aNormal;
     pos = aPos;
-    texCoords = aTexCoords;
+    texCoord = aTexCoords;
 
     gl_ClipDistance[0] = dot(vec4(aPos, 1.0), clipPlane);
 }

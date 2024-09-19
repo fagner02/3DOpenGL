@@ -150,8 +150,10 @@ void printVec3(glm::vec3 vec) {
 
 int main() {
     // glm::mat4 mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    glm::mat4 mat = glm::orthoZO<double>(-1, 1.0, -1.0, 1.0, 0.1, 100.0);
-
+    // glm::mat4 mat = glm::transpose(glm::ortho<double>(4, 5, -1.0, 1.0, 2, 5));
+    // glm::mat4 mat = glm::shear(glm::identity<glm::mat4>(), glm::vec3(0,0,0), glm::vec2())
+    glm::mat4 mat = glm::transpose((glm::mat4)glm::frustum<double>(0, 0, 1.5, 2.5, 2, 4));
+    // glm::mat4 mat = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 4.0f);
     // glm::mat4 mat = glm::mat4(
     //     0, -1, 0, 0,
     //     1, 0, 0, 0,
@@ -163,6 +165,10 @@ int main() {
     //         0, 0, 1, 0,
     //         0, 0, 0, 1
     //     );
+    // 8 = 5+x*-5
+    // 8-5= -5x
+    // 3 = -5x
+    // 3/-5 = x
 
     // glm::vec3 eye = glm::vec3(0, 1, 0);
     // glm::vec3 center = glm::vec3(1, 2, 1);
@@ -172,8 +178,17 @@ int main() {
         }
         std::cout << "\n";
     }
-    glm::vec4 res = mat * glm::vec4(1, 1, 1, 1);
-    std::cout << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3];
+    glm::vec4 res = glm::transpose(mat) * glm::vec4(0, 5, -4, 1);
+    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
+    res = glm::transpose(mat) * glm::vec4(0, 1.5, -2, 1);
+    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
+
+    res = glm::transpose(mat) * glm::vec4(0, 2.5, -2, 1);
+    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
+
+    res = glm::transpose(mat) * glm::vec4(0, 3, -4, 1);
+    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
+
 
     if (!glfwInit()) {
         std::cout << "erro";
@@ -212,7 +227,7 @@ int main() {
 
     glm::vec3 lightPos(0.5, 0.5, 1.5);
     Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
-    Cube cube3(glm::vec3(0.0, 0.2, -0.3), 0.2);
+    Cube cube3(glm::vec3(0.0, 0.1, -0.3), 0.2);
     Cube cube(lightPos, 0.05);
     Plane floor(glm::vec3(0.0, 0.0, -0.3), 2.5);
 
@@ -221,7 +236,7 @@ int main() {
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
 
-    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+    const unsigned int SHADOW_WIDTH = 1048, SHADOW_HEIGHT = 1048;
 
     unsigned int depthMap;
     glGenTextures(1, &depthMap);
@@ -230,8 +245,8 @@ int main() {
         SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
@@ -284,6 +299,8 @@ int main() {
             std::cout << pixel.ObjectID << "\n";
         }
 
+        // glEnable(GL_CULL_FACE);
+        // glCullFace(GL_FRONT);
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
@@ -296,27 +313,34 @@ int main() {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+
+        // glDisable(GL_CULL_FACE);
+        // glCullFace(GL_BACK);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.5, 0.2, 0.3, 1);
 
         defaultShader.useShader();
-        glActiveTexture(GL_TEXTURE0);
+        int texLoc = glGetUniformLocation(defaultShader.shaderProgram, "depthMap");
+        glUniform1i(texLoc, 1);
+        glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthMap);
+        int useTex = glGetUniformLocation(defaultShader.shaderProgram, "useTex");
+        glUniform1i(useTex, 1);
+        azulejo.bindTexture(defaultShader.shaderProgram);
         for (int i = 0; i < pickingTexture.objs.size();i++) {
             if (selected == i + 1) {
                 lightColor = glm::vec3(1, 0.5, 0.5);
             } else {
                 lightColor = glm::vec3(1, 1, 1);
             }
-
+            // azulejo.bindTexture();
             cam.applyMatrix(defaultShader.shaderProgram);
             cam.applyLightPos(defaultShader.shaderProgram, lightPos);
             cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-
             cam.applyLightProj(defaultShader.shaderProgram, shadowCam.proj * shadowCam.view);
 
-            // clipPlane.applyClipPlane(defaultShader.shaderProgram);
+            clipPlane.applyClipPlane(defaultShader.shaderProgram);
             pickingTexture.objs[i]->draw(defaultShader.shaderProgram);
         }
         lightColor = glm::vec3(1, 1, 1);
@@ -325,6 +349,7 @@ int main() {
         cam.applyMatrix(shellShader.shaderProgram);
         cam.applyLightPos(shellShader.shaderProgram, lightPos);
         cam.applyLightColor(shellShader.shaderProgram, lightColor);
+        cam.applyLightProj(defaultShader.shaderProgram, shadowCam.proj * shadowCam.view);
         // shellTexture.draw(shellShader.shaderProgram);
 
         lightShader.useShader();
@@ -336,17 +361,17 @@ int main() {
 
         glLineWidth(9);
 
-        Line line(glm::vec3(0, 0, 0), glm::vec3(0, 0, -1));
+        Line line(glm::vec3(0, 2, 2), glm::vec3(2, 2, 2), glm::vec3(0.9, 0.4, 0.4));
         line.draw(lightless.shaderProgram);
-        Line line1(glm::vec3(0, 0, 0), glm::vec3(0.5, 1, -0.5));
+        Line line1(glm::vec3(0, 3, 2.5), glm::vec3(3, 3, 2.5));
         line1.draw(lightless.shaderProgram);
-        Line line2(glm::vec3(0, 0, -1), glm::vec3(0.5, 1, -0.5));
-        line2.draw(lightless.shaderProgram);
-        Line line3(glm::vec3(0, 0, 0), glm::vec3(-1, 0.5, 0));
-        line3.draw(lightless.shaderProgram);
+        // Line line2(glm::vec3(0, 0, -1), glm::vec3(0.5, 1, -0.5));
+        // line2.draw(lightless.shaderProgram);
+        // Line line3(glm::vec3(0, 0, 0), glm::vec3(-1, 0.5, 0));
+        // line3.draw(lightless.shaderProgram);
 
         textureShader.useShader();
-        azulejo.bindTexture();
+        // azulejo.bindTexture();
         cam.applyMatrix(shellShader.shaderProgram);
         cam.applyLightPos(shellShader.shaderProgram, lightPos);
 

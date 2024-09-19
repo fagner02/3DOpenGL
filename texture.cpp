@@ -23,7 +23,9 @@ Texture::Texture(const char* filename) {
     stbi_image_free(data);
 }
 
-void Texture::bindTexture() {
+void Texture::bindTexture(int shaderProgram) {
+    int texLoc = glGetUniformLocation(shaderProgram, "tex");
+    glUniform1i(texLoc, 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 }
