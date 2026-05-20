@@ -35,7 +35,7 @@
 
 using namespace std;
 
-double width = 800, height = 600;
+double width = 1200, height = 600;
 Camera cam(width, height);
 bool down = false;
 bool click = false;
@@ -47,7 +47,15 @@ struct MousePos {
     double y;
 } mousePos;
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void mouse_button_callback(GLFWwindow *window, int button, int action,
+                           int mods) {
+
+    ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return;
+    }
+
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
         glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
         click = true;
@@ -65,16 +73,26 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         }
     }
 }
-Cube* cube2 = nullptr;
+Cube *cube2 = nullptr;
 
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
+static void cursor_position_callback(GLFWwindow *window, double xpos,
+                                     double ypos) {
+    ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return;
+    }
+
     if (down) {
         click = false;
     }
 
     if (down || follow_cursor) {
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(xpos - mousePos.x) * 0.5)), cam.up);
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(ypos - mousePos.y) * 0.5)), glm::cross(cam.up, cam.pos));
+        cam.orientation = glm::rotate(
+            cam.orientation, glm::radians((float)(-(xpos - mousePos.x) * 0.5)),
+            cam.up);
+        cam.orientation = glm::rotate(
+            cam.orientation, glm::radians((float)(-(ypos - mousePos.y) * 0.5)),
+            glm::cross(cam.up, cam.pos));
         cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
 
         mousePos.x = xpos;
@@ -83,40 +101,64 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 
     if (right_pressed) {
         cam.up = glm::vec3(0, 1, 0);
-        cam.pos = glm::rotate(cam.pos, glm::radians((float)(-(xpos - mousePos.x))), cam.up);
-        cam.pos = glm::rotate(cam.pos, glm::radians((float)(-(ypos - mousePos.y))), glm::cross(cam.up, cam.pos));
+        cam.pos = glm::rotate(
+            cam.pos, glm::radians((float)(-(xpos - mousePos.x))), cam.up);
+        cam.pos =
+            glm::rotate(cam.pos, glm::radians((float)(-(ypos - mousePos.y))),
+                        glm::cross(cam.up, cam.pos));
         cam.up = cam.up;
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(xpos - mousePos.x))), cam.up);
-        cam.orientation = glm::rotate(cam.orientation, glm::radians((float)(-(ypos - mousePos.y))), glm::cross(cam.up, cam.pos));
+        cam.orientation =
+            glm::rotate(cam.orientation,
+                        glm::radians((float)(-(xpos - mousePos.x))), cam.up);
+        cam.orientation = glm::rotate(
+            cam.orientation, glm::radians((float)(-(ypos - mousePos.y))),
+            glm::cross(cam.up, cam.pos));
         cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
-        cam.up = glm::rotate(cam.up, glm::radians((float)(-(ypos - mousePos.y))), (glm::cross(cam.up, cam.pos)));
+        cam.up =
+            glm::rotate(cam.up, glm::radians((float)(-(ypos - mousePos.y))),
+                        (glm::cross(cam.up, cam.pos)));
         mousePos.x = xpos;
         mousePos.y = ypos;
     }
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+    ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+    if (ImGui::GetIO().WantCaptureMouse) {
+        return;
+    }
+
     cam.view = glm::translate(cam.view, glm::vec3(xoffset, yoffset, 0.0));
 }
 ClipPlane clipPlane;
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+
+void char_callback(GLFWwindow *window, unsigned int codepoint) {
+    ImGui_ImplGlfw_CharCallback(window, codepoint);
+}
+void key_callback(GLFWwindow *window, int key, int scancode, int action,
+                  int mods) {
+
+    ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+
+    if (ImGui::GetIO().WantCaptureKeyboard) {
+        return;
+    }
+
     if (key == GLFW_KEY_LEFT) {
         cam.pos += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
-        // cam.up += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
-        // cam.orientation -= 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
     }
     if (key == GLFW_KEY_RIGHT) {
         cam.pos -= 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
-        // cam.up -= 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
-        // cam.orientation += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
     }
     if (key == GLFW_KEY_DOWN) {
-        cam.pos -= 0.1f * glm::normalize(glm::cross(glm::cross(cam.up, cam.orientation), cam.orientation));
-        // cam.up -= 0.1f * glm::normalize(cam.up);
+        cam.pos -=
+            0.1f * glm::normalize(glm::cross(
+                       glm::cross(cam.up, cam.orientation), cam.orientation));
     }
     if (key == GLFW_KEY_UP) {
-        cam.pos += 0.1f * glm::normalize(glm::cross(glm::cross(cam.up, cam.orientation), cam.orientation));
-        // cam.up += 0.1f * glm::normalize(cam.up);
+        cam.pos +=
+            0.1f * glm::normalize(glm::cross(
+                       glm::cross(cam.up, cam.orientation), cam.orientation));
     }
     if (key == GLFW_KEY_EQUAL) {
         cam.pos += 0.1f * glm::normalize(cam.orientation);
@@ -124,30 +166,30 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     if (key == GLFW_KEY_MINUS) {
         cam.pos -= 0.1f * glm::normalize(cam.orientation);
     }
-    // cam.up = glm::cross(cam.pos, cam.orientation);
+
     if (key == GLFW_KEY_A) {
         clipPlane.clipAngle += 0.1;
     }
     if (key == GLFW_KEY_D) {
         clipPlane.clipAngle -= 0.1;
     }
-    // cam.up = glm::abs(glm::cross(glm::abs(glm::cross(glm::vec3(0.0, 1.0, 0.0), cam.pos)), cam.pos));
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         follow_cursor = !follow_cursor;
     }
     cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
-    clipPlane.calculateClipPlane();
 }
 
-void window_size_callback(GLFWwindow* window, int _width, int _height) {
-    if (_height == 0) return;
+void window_size_callback(GLFWwindow *window, int _width, int _height) {
+    if (_height == 0)
+        return;
     height = _height;
     width = _width;
-    cam.proj = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 100.0f);
+    cam.proj = glm::perspective(glm::radians(45.0f), (float)(width / height),
+                                0.1f, 100.0f);
     glViewport(0, 0, width, height);
 }
 
-static void error_callback(int error, const char* description) {
+static void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
@@ -158,47 +200,6 @@ void printVec3(glm::vec3 vec) {
 }
 
 int main() {
-    // glm::mat4 mat = glm::lookAt(glm::vec3(0, 0, 5), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-    // glm::mat4 mat = glm::transpose(glm::ortho<double>(4, 5, -1.0, 1.0, 2, 5));
-    // glm::mat4 mat = glm::shear(glm::identity<glm::mat4>(), glm::vec3(0,0,0), glm::vec2())
-    glm::mat4 mat = glm::transpose((glm::mat4)glm::frustum<double>(0, 0, 1.5, 2.5, 2, 4));
-    // glm::mat4 mat = glm::perspective(glm::radians(45.0f), (float)(width / height), 0.1f, 4.0f);
-    // glm::mat4 mat = glm::mat4(
-    //     0, -1, 0, 0,
-    //     1, 0, 0, 0,
-    //     0, 0, 1, 0,
-    //     0, 0, 0, 1) *
-    //     glm::mat4(
-    //         1, 0, 0, 3,
-    //         0, 1, 0, 0,
-    //         0, 0, 1, 0,
-    //         0, 0, 0, 1
-    //     );
-    // 8 = 5+x*-5
-    // 8-5= -5x
-    // 3 = -5x
-    // 3/-5 = x
-
-    // glm::vec3 eye = glm::vec3(0, 1, 0);
-    // glm::vec3 center = glm::vec3(1, 2, 1);
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4;j++) {
-            std::cout << std::fixed << mat[i][j] << ", ";
-        }
-        std::cout << "\n";
-    }
-    glm::vec4 res = glm::transpose(mat) * glm::vec4(0, 5, -4, 1);
-    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
-    res = glm::transpose(mat) * glm::vec4(0, 1.5, -2, 1);
-    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
-
-    res = glm::transpose(mat) * glm::vec4(0, 2.5, -2, 1);
-    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
-
-    res = glm::transpose(mat) * glm::vec4(0, 3, -4, 1);
-    std::cout << "ponto: " << res[0] << ", " << res[1] << ", " << res[2] << ", " << res[3] << "\n";
-
-
     if (!glfwInit()) {
         std::cout << "erro";
         return -1;
@@ -207,7 +208,8 @@ int main() {
     glfwSetErrorCallback(error_callback);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4);
-    GLFWwindow* window = glfwCreateWindow(width, height, "Opengl Graphics", nullptr, nullptr);
+    GLFWwindow *window =
+        glfwCreateWindow(width, height, "Opengl Graphics", nullptr, nullptr);
     if (window == NULL) {
         cout << "erro";
     }
@@ -218,13 +220,28 @@ int main() {
     glfwSetCursorPosCallback(window, cursor_position_callback);
     glfwSetMouseButtonCallback(window, mouse_button_callback);
     glfwSetWindowSizeCallback(window, window_size_callback);
+    glfwSetCharCallback(window, char_callback);
 
+    glewExperimental = GL_TRUE;
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW\n";
+        return -1;
+    }
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_MULTISAMPLE);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_BLEND);
     glEnable(GL_CLIP_DISTANCE0);
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForOpenGL(window, false);
+    ImGui_ImplOpenGL3_Init("#version 330");
 
     Shader lightless("./shaders/lightless.vert", "./shaders/lightless.frag");
     Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
