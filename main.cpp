@@ -35,12 +35,27 @@
 
 using namespace std;
 
+struct ModelData {
+    Texture *texture;
+    ShellTexture *shellTexture;
+};
+
 double width = 1200, height = 600;
 Camera cam(width, height);
 bool down = false;
 bool click = false;
 bool follow_cursor = false;
 bool right_pressed = false;
+
+Picking pickingTexture;
+
+std::vector<Model> models = std::vector<Model>();
+std::vector<ModelData> modelsData = std::vector<ModelData>();
+std::vector<Texture> textures = std::vector<Texture>();
+
+Texture *defaultTexture = nullptr;
+
+Texture *selectedTexture = nullptr;
 
 struct MousePos {
     double x;
@@ -199,6 +214,11 @@ void printVec3(glm::vec3 vec) {
     }
 }
 
+void addModel(VertexArray *model) {
+    pickingTexture.objs.push_back(model);
+    modelsData.push_back({texture : defaultTexture, shellTexture : nullptr});
+}
+
 int main() {
     if (!glfwInit()) {
         std::cout << "erro";
@@ -267,15 +287,16 @@ int main() {
     unsigned int depthMap;
     glGenTextures(1, &depthMap);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-        SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
+                 SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           depthMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -283,35 +304,95 @@ int main() {
     Camera shadowCam(SHADOW_WIDTH, SHADOW_HEIGHT, lightPos);
     shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
 
-    Model model;
-    model.loadFile("./3ds/maclaren.3ds");
     Model ant;
     ant.loadFile("./3ds/ant2.obj");
 
-    //ant.saveFile("./3ds/ant2.obj", modelMatrix);
-    Texture azulejo("./textures/refri.bmp");
-    Picking pickingTexture;
+    textures.push_back(Texture("./textures/checkers.jpg"));
+    Texture azulejo("./textures/azulejo.jpg");
+    defaultTexture = &azulejo;
+    textures.push_back(azulejo);
+
     pickingTexture.init(width, height);
+
     glm::vec3 lightColor(0.5, 0.9, 0.5);
     unsigned int selected = 0;
 
-    // ShellTexture shellTexture(model.getModelBuffers("./3ds/maclaren.3ds"), 50, 0.2, 70, model.meshes);
-    ShellTexture shellTexture(floor.calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 2.5), 50, 0.2, 70);
-    // pickingTexture.objs.push_back(&sphere);
-    pickingTexture.objs.push_back(&cube3);
-    pickingTexture.objs.push_back(&floor);
-    pickingTexture.objs.push_back(&ant);
+    ShellTexture shellTexture(
+        floor.calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 2.5), 50, 0.2, 70);
+
+    addModel(&cube3);
+    addModel(&floor);
+    addModel(&ant);
 
     cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
+    static char text[1024] = "./3ds/maclaren.3DS";
     while (!glfwWindowShouldClose(window)) {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Controls");
+        ImGui::InputText("Text Area", text, IM_ARRAYSIZE(text));
+        if (ImGui::Button("Load##model")) {
+            std::cout << "clicked\n";
+            models.push_back(Model());
+            models[models.size() - 1].loadFile(text);
+
+            addModel(&models[models.size() - 1]);
+        }
+
+        if (selectedTexture != nullptr) {
+            ImGui::BeginGroup();
+
+            ImGui::Image((void *)(intptr_t)selectedTexture->textureId,
+                         ImVec2(32, 32));
+
+            ImGui::SameLine();
+            ImGui::BeginGroup();
+            ImGui::Text("Selected Texture");
+            if (selected > 0 && ImGui::Button("Load")) {
+                modelsData[selected - 1].texture = selectedTexture;
+            }
+            ImGui::EndGroup();
+            ImGui::EndGroup();
+        }
+
+        ImGui::End();
+
+        ImGui::Begin("Texture List");
+
+        ImGui::BeginChild("ImageList", ImVec2(0, 300), true);
+
+        size_t columns = 3;
+        for (size_t i = 0; i < textures.size(); i++) {
+            if (i > 0 && i % columns != 0) {
+                ImGui::SameLine();
+            }
+
+            if (ImGui::Selectable(("##cell" + std::to_string(i)).c_str(), false,
+                                  ImGuiSelectableFlags_None, ImVec2(64, 68))) {
+                selectedTexture = &textures[i];
+            }
+
+            ImVec2 pos = ImGui::GetItemRectMin();
+            pos.x += 4;
+            pos.y += 4;
+            ImGui::GetWindowDrawList()->AddImage(
+                (void *)(intptr_t)textures[i].textureId, pos,
+                ImVec2(pos.x + 64, pos.y + 64));
+        }
+
+        ImGui::EndChild();
+
+        ImGui::End();
+
         pickingTexture.enableWriting();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         picking.useShader();
         cam.applyMatrix(picking.shaderProgram);
-        clipPlane.applyClipPlane(picking.shaderProgram);
-        for (size_t i = 1; i <= pickingTexture.objs.size(); i++) {
+        for (size_t i = 1; i <= modelsData.size(); i++) {
             pickingTexture.applyIndex(picking.shaderProgram, i);
             pickingTexture.objs[i - 1]->draw(picking.shaderProgram);
         }
@@ -319,64 +400,67 @@ int main() {
         pickingTexture.disableWriting();
 
         if (!down && click) {
-            PixelInfo pixel = pickingTexture.ReadPixel(mousePos.x, height - mousePos.y);
+            PixelInfo pixel =
+                pickingTexture.ReadPixel(mousePos.x, height - mousePos.y);
             selected = pixel.ObjectID;
             click = false;
             std::cout << pixel.ObjectID << "\n";
         }
 
-        // glEnable(GL_CULL_FACE);
-        // glCullFace(GL_FRONT);
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
         shadowShader.useShader();
 
-        for (int i = 0; i < pickingTexture.objs.size();i++) {
+        for (int i = 0; i < modelsData.size(); i++) {
             shadowCam.applyMatrix(shadowShader.shaderProgram);
             pickingTexture.objs[i]->draw(shadowShader.shaderProgram);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-        // glDisable(GL_CULL_FACE);
-        // glCullFace(GL_BACK);
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.5, 0.2, 0.3, 1);
 
         defaultShader.useShader();
-        int texLoc = glGetUniformLocation(defaultShader.shaderProgram, "depthMap");
+        int texLoc =
+            glGetUniformLocation(defaultShader.shaderProgram, "depthMap");
         glUniform1i(texLoc, 1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, depthMap);
-        int useTex = glGetUniformLocation(defaultShader.shaderProgram, "useTex");
+        int useTex =
+            glGetUniformLocation(defaultShader.shaderProgram, "useTex");
         glUniform1i(useTex, 1);
-        azulejo.bindTexture(defaultShader.shaderProgram);
-        for (int i = 0; i < pickingTexture.objs.size();i++) {
+        for (int i = 0; i < modelsData.size(); i++) {
             if (selected == i + 1) {
                 lightColor = glm::vec3(1, 0.5, 0.5);
             } else {
                 lightColor = glm::vec3(1, 1, 1);
             }
-            // azulejo.bindTexture();
+
+            if (modelsData[i].shellTexture != nullptr) {
+
+                shellShader.useShader();
+                cam.applyMatrix(shellShader.shaderProgram);
+                cam.applyLightPos(shellShader.shaderProgram, lightPos);
+                cam.applyLightColor(shellShader.shaderProgram, lightColor);
+                cam.applyLightProj(defaultShader.shaderProgram,
+                                   shadowCam.proj * shadowCam.view);
+                modelsData[i].shellTexture->draw(shadowShader.shaderProgram);
+                continue;
+            }
+            if (modelsData[i].texture) {
+                modelsData[i].texture->bindTexture(defaultShader.shaderProgram);
+            }
             cam.applyMatrix(defaultShader.shaderProgram);
             cam.applyLightPos(defaultShader.shaderProgram, lightPos);
             cam.applyLightColor(defaultShader.shaderProgram, lightColor);
-            cam.applyLightProj(defaultShader.shaderProgram, shadowCam.proj * shadowCam.view);
-
-            clipPlane.applyClipPlane(defaultShader.shaderProgram);
+            cam.applyLightProj(defaultShader.shaderProgram,
+                               shadowCam.proj * shadowCam.view);
             pickingTexture.objs[i]->draw(defaultShader.shaderProgram);
         }
         lightColor = glm::vec3(1, 1, 1);
-
-        shellShader.useShader();
-        cam.applyMatrix(shellShader.shaderProgram);
-        cam.applyLightPos(shellShader.shaderProgram, lightPos);
-        cam.applyLightColor(shellShader.shaderProgram, lightColor);
-        cam.applyLightProj(defaultShader.shaderProgram, shadowCam.proj * shadowCam.view);
-        // shellTexture.draw(shellShader.shaderProgram);
 
         lightShader.useShader();
         cam.applyMatrix(lightShader.shaderProgram);
@@ -385,23 +469,20 @@ int main() {
         lightless.useShader();
         cam.applyMatrix(lightless.shaderProgram);
 
-        glLineWidth(9);
-
-        Line line(glm::vec3(0, 2, 2), glm::vec3(2, 2, 2), glm::vec3(0.9, 0.4, 0.4));
-        line.draw(lightless.shaderProgram);
-        Line line1(glm::vec3(0, 3, 2.5), glm::vec3(3, 3, 2.5));
-        line1.draw(lightless.shaderProgram);
-        // Line line2(glm::vec3(0, 0, -1), glm::vec3(0.5, 1, -0.5));
-        // line2.draw(lightless.shaderProgram);
-        // Line line3(glm::vec3(0, 0, 0), glm::vec3(-1, 0.5, 0));
-        // line3.draw(lightless.shaderProgram);
-
         textureShader.useShader();
-        // azulejo.bindTexture();
         cam.applyMatrix(shellShader.shaderProgram);
         cam.applyLightPos(shellShader.shaderProgram, lightPos);
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwWaitEvents();
     }
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+    glfwTerminate();
+    return 0;
 }
