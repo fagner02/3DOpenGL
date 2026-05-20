@@ -332,12 +332,13 @@ int main() {
     shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
 
     Model ant;
-    ant.loadFile("./3ds/ant.obj");
+    ant.loadFile("./3ds/ant2.obj");
 
+    textures.push_back(Texture("./textures/azulejo.jpg"));
+    textures.push_back(Texture("./textures/granito.jpg"));
     textures.push_back(Texture("./textures/checkers.jpg"));
-    Texture azulejo("./textures/azulejo.jpg");
-    defaultTexture = &azulejo;
-    textures.push_back(azulejo);
+
+    defaultTexture = &textures[0];
 
     pickingTexture.init(width, height);
 
