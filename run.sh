@@ -13,6 +13,7 @@ shapes/sphere.cpp \
 shapes/cube.cpp \
 shapes/line.cpp \
 shaders/shader.cpp \
+include/imgui/ImGuizmo.cpp \
 include/imgui/imgui.cpp \
 include/imgui/imgui_draw.cpp \
 include/imgui/imgui_tables.cpp \

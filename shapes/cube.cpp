@@ -17,11 +17,11 @@ VAOBuffers Cube::calcCubeVertices(glm::vec3 pos, float size) {
     };
 
     size /= 2;
-    point axis[] = { {1,2},{0,2},{0,1} };
-    int sign[] = { -1,1 };
+    point axis[] = {{1, 2}, {0, 2}, {0, 1}};
+    int sign[] = {-1, 1};
     for (int i = 0; i < 3; i++) {
-        for (int k = 0;k < 2;k++) {
-            point points[] = { {-1, -1}, {-1, 1}, {1, -1}, {1, 1} };
+        for (int k = 0; k < 2; k++) {
+            point points[] = {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
             glm::vec3 s1[4];
             for (int j = 0; j < 4; j++) {
                 glm::vec3 start(size);
@@ -32,17 +32,17 @@ VAOBuffers Cube::calcCubeVertices(glm::vec3 pos, float size) {
                 start += pos;
 
                 vertices.push_back(start);
-                uvs.push_back(glm::vec2((float)(points[j].x == 1), (float)(points[j].y == 1)));
+                uvs.push_back(glm::vec2((float)(points[j].x == 1),
+                                        (float)(points[j].y == 1)));
             }
             glm::vec3 normal = glm::cross((s1[0] - s1[1]), (s1[2] - s1[1]));
-            glm::distance(glm::vec3(0.0), normal);
             if (glm::length(s1[0] + normal) < glm::length(s1[0]))
                 normal *= -1;
 
             for (int j = 0; j < 4; j++) {
                 normals.push_back(normal);
 
-                colors.push_back({ 0.7,0.3,0.9 });
+                colors.push_back({0.7, 0.3, 0.9});
             }
             for (int j = 0; j < 3; j++) {
                 indexes.push_back(j + i * 8 + k * 4);
@@ -53,7 +53,7 @@ VAOBuffers Cube::calcCubeVertices(glm::vec3 pos, float size) {
         }
     }
 
-    return { vertices, colors, normals, uvs, indexes };
+    return {vertices, colors, normals, uvs, indexes};
 }
 
 void Cube::draw(int shaderProgram) {

@@ -23,6 +23,8 @@
 #include "include/imgui/imgui_impl_glfw.h"
 #include "include/imgui/imgui_impl_opengl3.h"
 
+#include "include/imgui/ImGuizmo.h"
+
 #include <GL/glew.h>
 
 #include <GL/gl.h>
@@ -45,8 +47,14 @@ double width = 1200, height = 600;
 Camera cam(width, height);
 bool down = false;
 bool click = false;
+bool gizmo_down = false;
 bool follow_cursor = false;
 bool right_pressed = false;
+ImGuizmo::OPERATION operation;
+
+Shader lightlessShader;
+
+Model gizmoModel;
 
 Picking pickingTexture;
 
@@ -73,11 +81,16 @@ void mouse_button_callback(GLFWwindow *window, int button, int action,
     }
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        if (ImGuizmo::IsOver() || ImGuizmo::IsUsingAny()) {
+            gizmo_down = true;
+            cout << "gizmo down\n";
+        }
         glfwGetCursorPos(window, &mousePos.x, &mousePos.y);
         click = true;
         down = true;
     }
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+        gizmo_down = false;
         down = false;
     }
     if (button == GLFW_MOUSE_BUTTON_RIGHT) {
@@ -94,6 +107,11 @@ static void cursor_position_callback(GLFWwindow *window, double xpos,
                                      double ypos) {
     ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
     if (ImGui::GetIO().WantCaptureMouse) {
+        return;
+    }
+    if (gizmo_down) {
+        cout << "gizmo move\n";
+        click = false;
         return;
     }
 
@@ -184,6 +202,17 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         follow_cursor = !follow_cursor;
     }
+
+    if (key == GLFW_KEY_R) {
+        operation = ImGuizmo::ROTATE;
+    }
+    if (key == GLFW_KEY_T) {
+        operation = ImGuizmo::TRANSLATE;
+    }
+    if (key == GLFW_KEY_S) {
+        operation = ImGuizmo::SCALE;
+    }
+
     cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
 }
 
@@ -260,7 +289,8 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, false);
     ImGui_ImplOpenGL3_Init("#version 330");
 
-    Shader lightless("./shaders/lightless.vert", "./shaders/lightless.frag");
+    lightlessShader =
+        Shader("./shaders/lightless.vert", "./shaders/lightless.frag");
     Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
     Shader defaultShader("./shaders/default.vert", "./shaders/default.frag");
     Shader picking("./shaders/picking.vert", "./shaders/picking.frag");
@@ -301,8 +331,10 @@ int main() {
     Camera shadowCam(SHADOW_WIDTH, SHADOW_HEIGHT, lightPos);
     shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
 
+    gizmoModel.loadFile("./3ds/gizmo.glb");
+
     Model ant;
-    ant.loadFile("./3ds/ant2.obj");
+    ant.loadFile("./3ds/ant.obj");
 
     textures.push_back(Texture("./textures/checkers.jpg"));
     Texture azulejo("./textures/azulejo.jpg");
@@ -327,14 +359,16 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
+        ImGuizmo::BeginFrame();
+
         ImGui::Begin("Controls");
         ImGui::InputText("Text Area", text, IM_ARRAYSIZE(text));
         if (ImGui::Button("Load##model")) {
             std::cout << "clicked\n";
             models.push_back(Model());
             models[models.size() - 1].loadFile(text);
-
             addModel(&models[models.size() - 1]);
+            selected = models.size();
         }
 
         if (selectedTexture != nullptr) {
@@ -352,6 +386,9 @@ int main() {
             }
             ImGui::EndGroup();
             ImGui::EndGroup();
+        }
+        if (ImGui::Checkbox("Orthographic", &cam.isOrthographic)) {
+            cam.toggleOrthographic();
         }
 
         if (selected > 0 && selected < modelsData.size() + 1 &&
@@ -400,6 +437,8 @@ int main() {
         ImGui::EndChild();
 
         ImGui::End();
+
+        ImGui::EndFrame();
 
         pickingTexture.enableWriting();
 
@@ -484,18 +523,29 @@ int main() {
         cam.applyMatrix(lightShader.shaderProgram);
         cube.draw(lightShader.shaderProgram);
 
-        lightless.useShader();
-        cam.applyMatrix(lightless.shaderProgram);
+        lightlessShader.useShader();
+        cam.applyMatrix(lightlessShader.shaderProgram);
 
         textureShader.useShader();
         cam.applyMatrix(shellShader.shaderProgram);
         cam.applyLightPos(shellShader.shaderProgram, lightPos);
 
+        if (selected > 0 && selected < modelsData.size() + 1) {
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::SetDrawlist(ImGui::GetForegroundDrawList());
+            ImGuizmo::SetRect(0, 0, (float)width, (float)height);
+
+            bool changed = ImGuizmo::Manipulate(
+                glm::value_ptr(cam.view), glm::value_ptr(cam.proj), operation,
+                ImGuizmo::WORLD,
+                glm::value_ptr(pickingTexture.objs[selected - 1]->modelMatrix));
+        }
+
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
-        glfwWaitEvents();
+        glfwPollEvents();
     }
 
     ImGui_ImplOpenGL3_Shutdown();

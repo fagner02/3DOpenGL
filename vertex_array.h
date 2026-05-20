@@ -41,6 +41,7 @@ class VertexArray {
   public:
     std::vector<Mesh> meshes;
     VAOBuffers originalBuffers;
+    glm::vec3 pos = glm::vec3(0, 0, 0);
     unsigned int vao, vbo[4], ebo;
     glm::mat4 modelMatrix = glm::mat4(1.0);
     unsigned int bufferCount;
