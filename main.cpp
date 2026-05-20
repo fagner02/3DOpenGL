@@ -38,6 +38,7 @@ using namespace std;
 struct ModelData {
     Texture *texture;
     ShellTexture *shellTexture;
+    bool enableShellTexture;
 };
 
 double width = 1200, height = 600;
@@ -88,7 +89,6 @@ void mouse_button_callback(GLFWwindow *window, int button, int action,
         }
     }
 }
-Cube *cube2 = nullptr;
 
 static void cursor_position_callback(GLFWwindow *window, double xpos,
                                      double ypos) {
@@ -145,7 +145,6 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 
     cam.view = glm::translate(cam.view, glm::vec3(xoffset, yoffset, 0.0));
 }
-ClipPlane clipPlane;
 
 void char_callback(GLFWwindow *window, unsigned int codepoint) {
     ImGui_ImplGlfw_CharCallback(window, codepoint);
@@ -182,12 +181,6 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
         cam.pos -= 0.1f * glm::normalize(cam.orientation);
     }
 
-    if (key == GLFW_KEY_A) {
-        clipPlane.clipAngle += 0.1;
-    }
-    if (key == GLFW_KEY_D) {
-        clipPlane.clipAngle -= 0.1;
-    }
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
         follow_cursor = !follow_cursor;
     }
@@ -216,7 +209,11 @@ void printVec3(glm::vec3 vec) {
 
 void addModel(VertexArray *model) {
     pickingTexture.objs.push_back(model);
-    modelsData.push_back({texture : defaultTexture, shellTexture : nullptr});
+    modelsData.push_back({
+        texture : defaultTexture,
+        shellTexture : nullptr,
+        enableShellTexture : false
+    });
 }
 
 int main() {
@@ -324,7 +321,6 @@ int main() {
     addModel(&floor);
     addModel(&ant);
 
-    cube2 = new Cube(glm::vec3(0.0, 0.0, 0.0), 0.7);
     static char text[1024] = "./3ds/maclaren.3DS";
     while (!glfwWindowShouldClose(window)) {
         ImGui_ImplOpenGL3_NewFrame();
@@ -350,11 +346,30 @@ int main() {
             ImGui::SameLine();
             ImGui::BeginGroup();
             ImGui::Text("Selected Texture");
-            if (selected > 0 && ImGui::Button("Load")) {
+            if (selected > 0 && selected < modelsData.size() + 1 &&
+                ImGui::Button("Load")) {
                 modelsData[selected - 1].texture = selectedTexture;
             }
             ImGui::EndGroup();
             ImGui::EndGroup();
+        }
+
+        if (selected > 0 && selected < modelsData.size() + 1 &&
+            ImGui::Checkbox("Enable Shell Texture",
+                            &modelsData[selected - 1].enableShellTexture)) {
+            if (modelsData[selected - 1].shellTexture == nullptr) {
+                cout << pickingTexture.objs[selected - 1]->meshes.size();
+                if (pickingTexture.objs[selected - 1]->meshes.size() > 0) {
+                    modelsData[selected - 1].shellTexture = new ShellTexture(
+                        pickingTexture.objs[selected - 1]->originalBuffers, 50,
+                        0.2, 70, pickingTexture.objs[selected - 1]->meshes);
+                } else {
+
+                    modelsData[selected - 1].shellTexture = new ShellTexture(
+                        pickingTexture.objs[selected - 1]->originalBuffers, 50,
+                        0.2, 70);
+                }
+            }
         }
 
         ImGui::End();
@@ -424,33 +439,25 @@ int main() {
         glClearColor(0.5, 0.2, 0.3, 1);
 
         defaultShader.useShader();
-        int texLoc =
-            glGetUniformLocation(defaultShader.shaderProgram, "depthMap");
-        glUniform1i(texLoc, 1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        int useTex =
-            glGetUniformLocation(defaultShader.shaderProgram, "useTex");
-        glUniform1i(useTex, 1);
         for (int i = 0; i < modelsData.size(); i++) {
+            if (modelsData[i].enableShellTexture)
+                continue;
             if (selected == i + 1) {
                 lightColor = glm::vec3(1, 0.5, 0.5);
             } else {
                 lightColor = glm::vec3(1, 1, 1);
             }
 
-            if (modelsData[i].shellTexture != nullptr) {
+            int texLoc =
+                glGetUniformLocation(defaultShader.shaderProgram, "depthMap");
+            glUniform1i(texLoc, 1);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, depthMap);
 
-                shellShader.useShader();
-                cam.applyMatrix(shellShader.shaderProgram);
-                cam.applyLightPos(shellShader.shaderProgram, lightPos);
-                cam.applyLightColor(shellShader.shaderProgram, lightColor);
-                cam.applyLightProj(defaultShader.shaderProgram,
-                                   shadowCam.proj * shadowCam.view);
-                modelsData[i].shellTexture->draw(shadowShader.shaderProgram);
-                continue;
-            }
-            if (modelsData[i].texture) {
+            if (modelsData[i].texture != nullptr) {
+                int useTex =
+                    glGetUniformLocation(defaultShader.shaderProgram, "useTex");
+                glUniform1i(useTex, 1);
                 modelsData[i].texture->bindTexture(defaultShader.shaderProgram);
             }
             cam.applyMatrix(defaultShader.shaderProgram);
@@ -459,6 +466,17 @@ int main() {
             cam.applyLightProj(defaultShader.shaderProgram,
                                shadowCam.proj * shadowCam.view);
             pickingTexture.objs[i]->draw(defaultShader.shaderProgram);
+        }
+        for (int i = 0; i < modelsData.size(); i++) {
+            if (!modelsData[i].enableShellTexture ||
+                modelsData[i].shellTexture == nullptr) {
+                continue;
+            }
+            shellShader.useShader();
+            cam.applyMatrix(shellShader.shaderProgram);
+            cam.applyLightPos(shellShader.shaderProgram, lightPos);
+            cam.applyLightColor(shellShader.shaderProgram, lightColor);
+            modelsData[i].shellTexture->draw(shellShader.shaderProgram);
         }
         lightColor = glm::vec3(1, 1, 1);
 

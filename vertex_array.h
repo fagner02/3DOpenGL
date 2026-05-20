@@ -13,6 +13,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+struct Mesh {
+    unsigned int baseVertex;
+    unsigned int baseIndex;
+    unsigned int indexNum;
+    unsigned int materialIndex;
+};
+
 struct VAOBuffers {
     std::vector<glm::vec3> coordinates;
     std::vector<glm::vec3> colors;
@@ -32,6 +39,8 @@ class VertexArray {
     int attrNum;
 
   public:
+    std::vector<Mesh> meshes;
+    VAOBuffers originalBuffers;
     unsigned int vao, vbo[4], ebo;
     glm::mat4 modelMatrix = glm::mat4(1.0);
     unsigned int bufferCount;

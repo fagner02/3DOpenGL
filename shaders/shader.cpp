@@ -2,7 +2,7 @@
 
 Shader::Shader() {}
 
-void errorLog(int shader, char* filename, char* source) {
+void errorLog(int shader, const char *filename, const char *source) {
     int status, length;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
     if (status == GL_TRUE) {
@@ -11,7 +11,7 @@ void errorLog(int shader, char* filename, char* source) {
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
 
     int writtenChars = 0;
-    char* log = new char[length];
+    char *log = new char[length];
     glGetShaderInfoLog(shader, length, &writtenChars, log);
 
     std::cout << "FILE: " << filename << ".\n" << source << "\n" << log << "\n";
@@ -22,11 +22,10 @@ void pError(int program) {
     GLint success = GL_FALSE;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (success == GL_FALSE) {
-        GLchar errorLog[1024] = { 0 };
+        GLchar errorLog[1024] = {0};
         glGetProgramInfoLog(program, 1024, NULL, errorLog);
         std::cout << "error linking program: " << errorLog;
     }
-
 }
 
 void vE(int program) {
@@ -34,14 +33,13 @@ void vE(int program) {
     glValidateProgram(program);
     glGetProgramiv(program, GL_VALIDATE_STATUS, &success);
     if (success == GL_FALSE) {
-        GLchar errorLog[1024] = { 0 };
+        GLchar errorLog[1024] = {0};
         glGetProgramInfoLog(program, 1024, NULL, errorLog);
         std::cout << "error validating shader program; Details: " << errorLog;
-
     }
 }
 
-char* Shader::loadSource(char* filename) {
+char *Shader::loadSource(const char *filename) {
     std::ifstream file(filename, std::ifstream::binary);
     if (file.fail()) {
         std::cout << "Error loading shader source file\n";
@@ -51,17 +49,17 @@ char* Shader::loadSource(char* filename) {
     int length = 1 + file.tellg();
     file.seekg(0, file.beg);
 
-    char* vertex = new char[length];
+    char *vertex = new char[length];
     file.read(vertex, length);
 
     file.close();
     vertex[length - 1] = '\0';
     return vertex;
 }
-Shader::Shader(char* vertex_filename, char* frag_filename) {
+Shader::Shader(const char *vertex_filename, const char *frag_filename) {
 
-    char* vertex = loadSource(vertex_filename);
-    char* frag = loadSource(frag_filename);
+    char *vertex = loadSource(vertex_filename);
+    char *frag = loadSource(frag_filename);
 
     int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     int fragShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -87,10 +85,6 @@ Shader::Shader(char* vertex_filename, char* frag_filename) {
     glDeleteShader(fragShader);
 }
 
-void Shader::useShader() {
-    glUseProgram(shaderProgram);
-}
+void Shader::useShader() { glUseProgram(shaderProgram); }
 
-void Shader::deleteShader() {
-    glDeleteProgram(shaderProgram);
-}
+void Shader::deleteShader() { glDeleteProgram(shaderProgram); }

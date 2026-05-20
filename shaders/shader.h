@@ -15,7 +15,7 @@ class Shader {
   public:
     int shaderProgram = 0;
 
-    Shader(char *vertex_filename, char *frag_filename);
+    Shader(const char *vertex_filename, const char *frag_filename);
 
     Shader();
 
@@ -23,5 +23,5 @@ class Shader {
 
     void deleteShader();
 
-    char *loadSource(char *filename);
+    char *loadSource(const char *filename);
 };

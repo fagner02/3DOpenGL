@@ -2,16 +2,18 @@
 
 VertexArray::VertexArray() {}
 
-template<typename T>
+template <typename T>
 void VertexArray::bindAttrib(std::vector<T> buffer, int index, int size) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo[index]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(T) * buffer.size(), buffer.data(), GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(T) * buffer.size(), buffer.data(),
+                 GL_DYNAMIC_DRAW);
     glEnableVertexAttribArray(index);
     glVertexAttribPointer(index, size, GL_FLOAT, GL_FALSE, 0, 0);
     glDisableVertexAttribArray(index);
 }
 
 void VertexArray::initialize(VAOBuffers buffers) {
+    this->originalBuffers = buffers;
     bool hasNormals = buffers.normals.size() > 0;
     bool hasColors = buffers.colors.size() > 0;
     bool hasTexCoord = buffers.texCoord.size() > 0;
@@ -40,23 +42,21 @@ void VertexArray::initialize(VAOBuffers buffers) {
         bufferCount = buffers.indexes.size();
         glGenBuffers(1, &ebo);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, buffers.indexes.size() * sizeof(unsigned int), buffers.indexes.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     buffers.indexes.size() * sizeof(unsigned int),
+                     buffers.indexes.data(), GL_DYNAMIC_DRAW);
     } else {
         bufferCount = buffers.coordinates.size() * sizeof(float);
     }
     glBindVertexArray(0);
 }
 
-VertexArray::VertexArray(VAOBuffers buffers) {
-    initialize(buffers);
-}
+VertexArray::VertexArray(VAOBuffers buffers) { initialize(buffers); }
 
-VertexArray::~VertexArray() {
-    deleteVertexArray();
-}
+VertexArray::~VertexArray() { deleteVertexArray(); }
 
 void VertexArray::enableAttribs() {
-    for (int i = 0; i < attrNum;i++) {
+    for (int i = 0; i < attrNum; i++) {
         glEnableVertexAttribArray(i);
     }
 }

@@ -22,17 +22,9 @@
 #include <IL/il.h>
 #include <glm/glm.hpp>
 
-struct Mesh {
-    unsigned int baseVertex;
-    unsigned int baseIndex;
-    unsigned int indexNum;
-    unsigned int materialIndex;
-};
-
 class Model : public VertexArray {
   public:
     std::string filename;
-    std::vector<Mesh> meshes;
     Model();
 
     void loadFile(const char *name);
