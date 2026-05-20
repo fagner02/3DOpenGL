@@ -1,42 +1,43 @@
 #include "shell_texture.h"
 
-void ShellTexture::initialize(VAOBuffers buffers, int shellNum,
-                              float shellHeight, int divisions,
-                              glm::mat4 *modelMatrix) {
+void ShellTexture::initialize(VertexArray *va, int shellNum, float shellHeight,
+                              int divisions) {
     this->shellNum = shellNum;
     this->shellHeight = shellHeight;
     this->divisions = divisions;
-    hasIndexes = buffers.indexes.size() > 0;
-    std::vector<glm::vec3> vertices = buffers.coordinates;
-    meshes.push_back(new VertexArray(buffers));
+    hasIndexes = va->originalBuffers.indexes.size() > 0;
+    meshes.push_back(new VertexArray(va->originalBuffers));
+
     for (size_t i = 1; i < shellNum; i++) {
-        for (size_t j = 0; j < buffers.coordinates.size(); j++) {
+        meshes.push_back(new VertexArray(meshes[i - 1]->originalBuffers));
+        for (size_t j = 0; j < va->originalBuffers.coordinates.size(); j++) {
             glm::vec3 newPoint =
-                extrudePoint(glm::vec3(0.0), buffers.normals[j],
+                extrudePoint(glm::vec3(0.0), va->originalBuffers.normals[j],
                              ((float)i / shellNum) * shellHeight);
-            buffers.coordinates[j] = buffers.coordinates[j] + newPoint;
+            meshes[i]->originalBuffers.coordinates[j] =
+                va->originalBuffers.coordinates[j] + newPoint;
         }
-        meshes.push_back(new VertexArray(buffers));
-        buffers.coordinates = vertices;
     }
 }
-ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight,
-                           int divisions, glm::mat4 *modelMatrix,
-                           std::vector<Mesh> modelMeshes) {
+ShellTexture::ShellTexture(VertexArray *va, int shellNum, float shellHeight,
+                           int divisions, glm::mat4 &modelMatrix,
+                           std::vector<Mesh> modelMeshes)
+    : modelMatrix(modelMatrix) {
     this->modelMeshes = modelMeshes;
-    initialize(buffers, shellNum, shellHeight, divisions, modelMatrix);
+    initialize(va, shellNum, shellHeight, divisions);
 }
 
-ShellTexture::ShellTexture(VAOBuffers buffers, int shellNum, float shellHeight,
-                           int divisions, glm::mat4 *modelMatrix) {
+ShellTexture::ShellTexture(VertexArray *va, int shellNum, float shellHeight,
+                           int divisions, glm::mat4 &modelMatrix)
+    : modelMatrix(modelMatrix) {
     this->modelMeshes = std::vector<Mesh>();
-    initialize(buffers, shellNum, shellHeight, divisions, modelMatrix);
+    initialize(va, shellNum, shellHeight, divisions);
 }
 VertexArray *ShellTexture::getFirstShell() { return meshes[0]; }
 
 void ShellTexture::applyMatrix(unsigned int shaderProgram) {
     int modelLoc = glGetUniformLocation(shaderProgram, "model");
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, (GLfloat *)(modelMatrix));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMatrix));
 }
 
 void ShellTexture::draw(unsigned int shaderProgram) {
@@ -49,7 +50,8 @@ void ShellTexture::draw(unsigned int shaderProgram) {
     for (size_t i = 0; i < shellNum; i++) {
         glUniform1f(siloc, i);
 
-        applyMatrix(shaderProgram);
+        // applyMatrix(shaderProgram);
+        meshes[i]->applyMatrix(shaderProgram);
         meshes[i]->bindVAO();
         if (modelMeshes.size() > 0) {
             for (int i = 0; i < modelMeshes.size(); i++) {

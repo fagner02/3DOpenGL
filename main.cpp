@@ -331,8 +331,6 @@ int main() {
     Camera shadowCam(SHADOW_WIDTH, SHADOW_HEIGHT, lightPos);
     shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
 
-    gizmoModel.loadFile("./3ds/gizmo.glb");
-
     Model ant;
     ant.loadFile("./3ds/ant.obj");
 
@@ -346,13 +344,10 @@ int main() {
     glm::vec3 lightColor(0.5, 0.9, 0.5);
     unsigned int selected = 0;
 
-    ShellTexture shellTexture(
-        floor.calcPlaneBuffers(glm::vec3(0.0, 0.0, -0.3), 2.5), 50, 0.2, 70);
-
     addModel(&cube3);
     addModel(&floor);
     addModel(&ant);
-
+    cout << "hiiii\n";
     static char text[1024] = "./3ds/maclaren.3DS";
     while (!glfwWindowShouldClose(window)) {
         ImGui_ImplOpenGL3_NewFrame();
@@ -398,13 +393,14 @@ int main() {
                 cout << pickingTexture.objs[selected - 1]->meshes.size();
                 if (pickingTexture.objs[selected - 1]->meshes.size() > 0) {
                     modelsData[selected - 1].shellTexture = new ShellTexture(
-                        pickingTexture.objs[selected - 1]->originalBuffers, 50,
-                        0.2, 70, pickingTexture.objs[selected - 1]->meshes);
+                        pickingTexture.objs[selected - 1], 50, 0.2, 70,
+                        pickingTexture.objs[selected - 1]->modelMatrix,
+                        pickingTexture.objs[selected - 1]->meshes);
                 } else {
 
                     modelsData[selected - 1].shellTexture = new ShellTexture(
-                        pickingTexture.objs[selected - 1]->originalBuffers, 50,
-                        0.2, 70);
+                        pickingTexture.objs[selected - 1], 50, 0.2, 70,
+                        pickingTexture.objs[selected - 1]->modelMatrix);
                 }
             }
         }
