@@ -4,10 +4,14 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "./include/GL/glut.h"
-#include "./include/GL/glext.h"
-#include "./glm/glm.hpp"
 #include "vertex_array.h"
+
+#include <GL/glew.h>
+
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glut.h>
+#include <glm/glm.hpp>
 
 struct PixelInfo {
     unsigned int ObjectID = 0;
@@ -17,8 +21,8 @@ struct PixelInfo {
 };
 
 class Picking {
-public:
-    std::vector<VertexArray*> objs;
+  public:
+    std::vector<VertexArray *> objs;
     Picking() {}
 
     ~Picking();
@@ -33,8 +37,7 @@ public:
 
     PixelInfo ReadPixel(unsigned int x, unsigned int y);
 
-private:
-
+  private:
     unsigned int fbo = 0;
     unsigned int rbo = 0;
     GLuint pickingTexture = 0;

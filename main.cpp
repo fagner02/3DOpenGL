@@ -1,28 +1,37 @@
 #define GLM_ENABLE_EXPERIMENTAL
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <vector>
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "./include/GL/glut.h"
-#include "./include/GL/glext.h"
+
 #include "./shaders/shader.h"
-#include "./include/glm/glm.hpp"
-#include "./include/glm/gtc/type_ptr.hpp"
-#include "./include/glm/gtx/rotate_vector.hpp"
-#include "./include/GLFW/glfw3.h"
-#include "./vertex_array.h"
-#include "./shapes/sphere.h"
 #include "./shapes/cube.h"
-#include "./shapes/point.h"
 #include "./shapes/line.h"
+#include "./shapes/point.h"
+#include "./shapes/sphere.h"
+#include "./vertex_array.h"
 #include "cam.h"
-#include "texture_picking.h"
+#include "clip_plane.h"
 #include "model.h"
 #include "shapes/plane.h"
-#include "clip_plane.h"
 #include "shell_texture.h"
+#include "texture_picking.h"
+
+#include "include/imgui/imgui.h"
+#include "include/imgui/imgui_impl_glfw.h"
+#include "include/imgui/imgui_impl_opengl3.h"
+
+#include <GL/glew.h>
+
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glut.h>
+#include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 using namespace std;
 

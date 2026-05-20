@@ -3,12 +3,17 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include <GL/glut.h>
+
+#include <GL/glew.h>
+
+#include <GL/gl.h>
 #include <GL/glext.h>
+#include <GL/glut.h>
 
 class Texture {
-    unsigned int texture = 0;
-public:
-    Texture(const char* filename);
+  public:
+    const char *filename;
+    unsigned int textureId = 0;
+    Texture(const char *filename);
     void bindTexture(int shaderProgram);
 };

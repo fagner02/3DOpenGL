@@ -4,10 +4,14 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "./include/GL/glut.h"
-#include "./include/GL/glext.h"
-#include "./include/glm/glm.hpp"
-#include "./include/glm/gtc/type_ptr.hpp"
+
+#include <GL/glew.h>
+
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glut.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 struct VAOBuffers {
     std::vector<glm::vec3> coordinates;
@@ -18,14 +22,16 @@ struct VAOBuffers {
 };
 
 class VertexArray {
-protected:
+  protected:
     void initialize(VAOBuffers buffers);
-private:
-    template<typename T>
+
+  private:
+    template <typename T>
     void bindAttrib(std::vector<T> buffer, int index, int size);
 
     int attrNum;
-public:
+
+  public:
     unsigned int vao, vbo[4], ebo;
     glm::mat4 modelMatrix = glm::mat4(1.0);
     unsigned int bufferCount;

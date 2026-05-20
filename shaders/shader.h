@@ -1,19 +1,21 @@
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#include "../include/GL/glut.h"
-#include "../include/GL/glext.h"
 
+#include <GL/glew.h>
+
+#include <GL/gl.h>
+#include <GL/glext.h>
+#include <GL/glut.h>
 
 class Shader {
-private:
-
-public:
+  private:
+  public:
     int shaderProgram = 0;
 
-    Shader(char* vertex_filename, char* frag_filename);
+    Shader(char *vertex_filename, char *frag_filename);
 
     Shader();
 
@@ -21,5 +23,5 @@ public:
 
     void deleteShader();
 
-    char* loadSource(char* filename);
+    char *loadSource(char *filename);
 };
