@@ -45,6 +45,12 @@ struct ModelData {
 
 double width = 1200, height = 600;
 Camera cam(width, height);
+
+glm::vec3 lightPos(0.5, 0.5, 1.5);
+
+const unsigned int SHADOW_WIDTH = 1048, SHADOW_HEIGHT = 1048;
+Camera shadowCam(SHADOW_WIDTH, SHADOW_HEIGHT, lightPos);
+
 bool down = false;
 bool click = false;
 bool gizmo_down = false;
@@ -61,6 +67,14 @@ Picking pickingTexture;
 std::vector<Model> models = std::vector<Model>();
 std::vector<ModelData> modelsData = std::vector<ModelData>();
 std::vector<Texture> textures = std::vector<Texture>();
+
+int shellCount = 50;
+float shellHeight = 0.2;
+int shellDivisions = 70;
+
+bool showPicking = false;
+bool showShadow = false;
+bool moveShadow = false;
 
 Texture *defaultTexture = nullptr;
 
@@ -177,26 +191,65 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
     }
 
     if (key == GLFW_KEY_LEFT) {
-        cam.pos += 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
+        if (moveShadow) {
+            shadowCam.pos +=
+                0.1f *
+                glm::normalize(glm::cross(shadowCam.orientation, shadowCam.up));
+        } else {
+            cam.pos +=
+                0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
+        }
     }
     if (key == GLFW_KEY_RIGHT) {
-        cam.pos -= 0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
+        if (moveShadow) {
+            shadowCam.pos -=
+                0.1f *
+                glm::normalize(glm::cross(shadowCam.orientation, shadowCam.up));
+        } else {
+            cam.pos -=
+                0.1f * glm::normalize(glm::cross(cam.orientation, cam.up));
+        }
     }
     if (key == GLFW_KEY_DOWN) {
-        cam.pos -=
-            0.1f * glm::normalize(glm::cross(
-                       glm::cross(cam.up, cam.orientation), cam.orientation));
+        if (moveShadow) {
+            shadowCam.pos -=
+                0.1f * glm::normalize(glm::cross(
+                           glm::cross(shadowCam.up, shadowCam.orientation),
+                           shadowCam.orientation));
+        } else {
+            cam.pos -=
+                0.1f *
+                glm::normalize(glm::cross(glm::cross(cam.up, cam.orientation),
+                                          cam.orientation));
+        }
     }
     if (key == GLFW_KEY_UP) {
-        cam.pos +=
-            0.1f * glm::normalize(glm::cross(
-                       glm::cross(cam.up, cam.orientation), cam.orientation));
+        if (moveShadow) {
+            shadowCam.pos +=
+                0.1f * glm::normalize(glm::cross(
+                           glm::cross(shadowCam.up, shadowCam.orientation),
+                           shadowCam.orientation));
+        } else {
+            cam.pos +=
+                0.1f *
+                glm::normalize(glm::cross(glm::cross(cam.up, cam.orientation),
+                                          cam.orientation));
+        }
     }
+
     if (key == GLFW_KEY_EQUAL) {
-        cam.pos += 0.1f * glm::normalize(cam.orientation);
+        if (moveShadow) {
+            shadowCam.pos += 0.1f * glm::normalize(shadowCam.orientation);
+        } else {
+            cam.pos += 0.1f * glm::normalize(cam.orientation);
+        }
     }
     if (key == GLFW_KEY_MINUS) {
-        cam.pos -= 0.1f * glm::normalize(cam.orientation);
+        if (moveShadow) {
+            shadowCam.pos -= 0.1f * glm::normalize(shadowCam.orientation);
+        } else {
+            cam.pos -= 0.1f * glm::normalize(cam.orientation);
+        }
     }
 
     if (key == GLFW_KEY_M && action == GLFW_PRESS) {
@@ -213,7 +266,17 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
         operation = ImGuizmo::SCALE;
     }
 
-    cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        cout << "move show shadow\n";
+        moveShadow = !moveShadow;
+    }
+
+    if (moveShadow) {
+        shadowCam.view =
+            glm::lookAt(shadowCam.pos, glm::vec3(0, 0, 0), shadowCam.up);
+    } else {
+        cam.view = glm::lookAt(cam.pos, cam.pos + cam.orientation, cam.up);
+    }
 }
 
 void window_size_callback(GLFWwindow *window, int _width, int _height) {
@@ -294,22 +357,23 @@ int main() {
     Shader lightShader("./shaders/light.vert", "./shaders/light.frag");
     Shader defaultShader("./shaders/default.vert", "./shaders/default.frag");
     Shader picking("./shaders/picking.vert", "./shaders/picking.frag");
+    Shader pickingDebug("./shaders/picking.vert",
+                        "./shaders/picking_debug.frag");
     Shader textureShader("./shaders/texture.vert", "./shaders/texture.frag");
     Shader shellShader("./shaders/shell.vert", "./shaders/shell.frag");
     Shader shadowShader("./shaders/shadow.vert", "./shaders/shadow.frag");
 
-    glm::vec3 lightPos(0.5, 0.5, 1.5);
     Sphere sphere(0.3, glm::vec3(0.0, 0.0, -0.3), 50);
     Cube cube3(glm::vec3(0.0, 0.1, -0.3), 0.2);
     Cube cube(lightPos, 0.05);
     Plane floor(glm::vec3(0.0, 0.0, -0.3), 2.5);
 
+    shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
+
     glm::mat4 lightProj = glm::orthoZO<double>(-1, 1, -1, 1, 0.1, 100);
 
     unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);
-
-    const unsigned int SHADOW_WIDTH = 1048, SHADOW_HEIGHT = 1048;
 
     unsigned int depthMap;
     glGenTextures(1, &depthMap);
@@ -328,9 +392,6 @@ int main() {
     glReadBuffer(GL_NONE);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    Camera shadowCam(SHADOW_WIDTH, SHADOW_HEIGHT, lightPos);
-    shadowCam.view = glm::lookAt(lightPos, glm::vec3(0, 0, 0), shadowCam.up);
-
     Model ant;
     ant.loadFile("./3ds/ant2.obj");
 
@@ -348,7 +409,6 @@ int main() {
     addModel(&cube3);
     addModel(&floor);
     addModel(&ant);
-    cout << "hiiii\n";
     static char text[1024] = "./3ds/maclaren.3DS";
     while (!glfwWindowShouldClose(window)) {
         ImGui_ImplOpenGL3_NewFrame();
@@ -405,11 +465,35 @@ int main() {
                 }
             }
         }
+        ImGui::End();
 
+        ImGui::Begin("Debug Options");
+        ImGui::Checkbox("show picking buffer", &showPicking);
+        ImGui::Checkbox("show shadow buffer", &showShadow);
+        ImGui::End();
+
+        ImGui::Begin("Shell Texture");
+        bool shellChanged = false;
+        shellChanged = shellChanged ||
+                       ImGui::DragInt("shell count", &shellCount, 0.1f, 2, 50);
+
+        shellChanged =
+            shellChanged ||
+            ImGui::DragFloat("shell height", &shellHeight, 0.001f, 0.06, 2);
+
+        shellChanged =
+            shellChanged ||
+            ImGui::DragInt("shell divisions", &shellDivisions, 0.1f, 2, 80);
+
+        if (shellChanged && selected > 0 && selected < modelsData.size() + 1) {
+            free(modelsData[selected - 1].shellTexture);
+            modelsData[selected - 1].shellTexture = new ShellTexture(
+                pickingTexture.objs[selected - 1], shellCount, shellHeight,
+                shellDivisions, pickingTexture.objs[selected - 1]->modelMatrix);
+        }
         ImGui::End();
 
         ImGui::Begin("Texture List");
-
         ImGui::BeginChild("ImageList", ImVec2(0, 300), true);
 
         size_t columns = 3;
@@ -432,24 +516,43 @@ int main() {
         }
 
         ImGui::EndChild();
-
         ImGui::End();
-
         ImGui::EndFrame();
 
         pickingTexture.enableWriting();
 
+        if (showPicking) {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        }
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        picking.useShader();
-        cam.applyMatrix(picking.shaderProgram);
+        glClearColor(0.5, 0.2, 0.3, 1);
+        if (showPicking) {
+            pickingDebug.useShader();
+            cam.applyMatrix(pickingDebug.shaderProgram);
+        } else {
+            picking.useShader();
+            cam.applyMatrix(picking.shaderProgram);
+        }
         for (size_t i = 1; i <= modelsData.size(); i++) {
-            pickingTexture.applyIndex(picking.shaderProgram, i);
-            pickingTexture.objs[i - 1]->draw(picking.shaderProgram);
+            if (showPicking) {
+                pickingTexture.applyIndex(pickingDebug.shaderProgram, i,
+                                          modelsData.size());
+                pickingTexture.objs[i - 1]->draw(pickingDebug.shaderProgram);
+            } else {
+                pickingTexture.applyIndex(picking.shaderProgram, i);
+                pickingTexture.objs[i - 1]->draw(picking.shaderProgram);
+            }
         }
 
         pickingTexture.disableWriting();
+        if (showPicking) {
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+            continue;
+        }
         if (!down && click) {
             PixelInfo pixel =
                 pickingTexture.ReadPixel(mousePos.x, height - mousePos.y);
@@ -458,14 +561,29 @@ int main() {
             std::cout << pixel.ObjectID << "\n";
         }
 
-        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
-        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        if (showShadow) {
+            glViewport(0, 0, width, height);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+            glClearColor(0.5, 0.2, 0.3, 1);
+        } else {
+            glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+            glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+            glClear(GL_DEPTH_BUFFER_BIT);
+        }
         shadowShader.useShader();
 
         for (int i = 0; i < modelsData.size(); i++) {
             shadowCam.applyMatrix(shadowShader.shaderProgram);
             pickingTexture.objs[i]->draw(shadowShader.shaderProgram);
+        }
+        if (showShadow) {
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+            continue;
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

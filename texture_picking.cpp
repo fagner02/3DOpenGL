@@ -23,22 +23,27 @@ void Picking::init(unsigned int width, unsigned int height) {
     // Create the texture object for the primitive information buffer
     // glGenTextures(1, &m_pickingTexture);
     // glBindTexture(GL_TEXTURE_2D, m_pickingTexture);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_pickingTexture, 0);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+    // GL_UNSIGNED_BYTE, NULL); glTexParameteri(GL_TEXTURE_2D,
+    // GL_TEXTURE_MIN_FILTER, GL_NEAREST); glTexParameteri(GL_TEXTURE_2D,
+    // GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+    // GL_TEXTURE_2D, m_pickingTexture, 0);
 
     glGenTextures(1, &depthTexture);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTexture, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0,
+                 GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           depthTexture, 0);
 
     glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA32UI, width, height);
 
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rbo);
+    glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                              GL_RENDERBUFFER, rbo);
 
     GLenum Status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 
@@ -51,13 +56,9 @@ void Picking::init(unsigned int width, unsigned int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Picking::enableWriting() {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-}
+void Picking::enableWriting() { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo); }
 
-void Picking::disableWriting() {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-}
+void Picking::disableWriting() { glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); }
 
 PixelInfo Picking::ReadPixel(unsigned int x, unsigned int y) {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
@@ -74,7 +75,11 @@ PixelInfo Picking::ReadPixel(unsigned int x, unsigned int y) {
     return pixel;
 }
 
-void Picking::applyIndex(int shaderProgram, int index) {
+void Picking::applyIndex(int shaderProgram, int index, int length) {
     int loc = glGetUniformLocation(shaderProgram, "gObjectIndex");
     glUniform1ui(loc, index);
+    // if (length > 0) {
+    int shouldShowLoc = glGetUniformLocation(shaderProgram, "objsLength");
+    glUniform1i(shouldShowLoc, length);
+    // }
 }

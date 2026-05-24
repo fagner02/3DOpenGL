@@ -33,7 +33,7 @@ class Picking {
 
     void disableWriting();
 
-    void applyIndex(int shaderProgram, int index);
+    void applyIndex(int shaderProgram, int index, int length = 0);
 
     PixelInfo ReadPixel(unsigned int x, unsigned int y);
 
