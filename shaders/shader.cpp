@@ -43,6 +43,7 @@ char *Shader::loadSource(const char *filename) {
     std::ifstream file(filename, std::ifstream::binary);
     if (file.fail()) {
         std::cout << "Error loading shader source file\n";
+        return nullptr;
     }
 
     file.seekg(0, file.end);
@@ -57,9 +58,13 @@ char *Shader::loadSource(const char *filename) {
     return vertex;
 }
 Shader::Shader(const char *vertex_filename, const char *frag_filename) {
-
     char *vertex = loadSource(vertex_filename);
     char *frag = loadSource(frag_filename);
+
+    if (vertex == nullptr || frag == nullptr) {
+        shaderProgram = -1;
+        return;
+    }
 
     int vertexShader = glCreateShader(GL_VERTEX_SHADER);
     int fragShader = glCreateShader(GL_FRAGMENT_SHADER);

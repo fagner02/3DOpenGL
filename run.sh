@@ -20,5 +20,5 @@ include/imgui/imgui_tables.cpp \
 include/imgui/imgui_widgets.cpp \
 include/imgui/imgui_impl_glfw.cpp \
 include/imgui/imgui_impl_opengl3.cpp \
-vertex_array.cpp -o ./build/main -lGLEW -lglfw -lassimp -lGL -ldart-external-imgui
-./build/main
+vertex_array.cpp -o ./main -lGLEW -lglfw -lassimp -lGL -ldart-external-imgui
+./main

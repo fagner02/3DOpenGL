@@ -5,6 +5,8 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "./shaders/shader.h"
 #include "./shapes/cube.h"
@@ -393,14 +395,26 @@ int main() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     Model ant;
-    ant.loadFile("./3ds/ant2.obj");
+    if ((access("./3ds/ant2.obj", F_OK) != -1)) {
+        ant.loadFile("./3ds/ant2.obj");
+        addModel(&ant);
+    }
 
-    textures.push_back(Texture("./textures/azulejo.jpg"));
-    textures.push_back(Texture("./textures/granito.jpg"));
-    textures.push_back(Texture("./textures/checkers.jpg"));
+    std::vector<const char *> texturePaths = {"./textures/azulejo.jpg",
+                                              "./textures/granito.jpg",
+                                              "./textures/checkers.jpg"};
 
-    defaultTexture = &textures[0];
+    for (size_t i = 0; i < texturePaths.size(); i++) {
+        if (!(access(texturePaths[i], F_OK) != -1)) {
+            continue;
+        }
 
+        textures.push_back(Texture(texturePaths[i]));
+    }
+
+    if (textures.size() > 0) {
+        defaultTexture = &textures[0];
+    }
     pickingTexture.init(width, height);
 
     glm::vec3 lightColor(0.5, 0.9, 0.5);
@@ -408,7 +422,6 @@ int main() {
 
     addModel(&cube3);
     addModel(&floor);
-    addModel(&ant);
     static char text[1024] = "./3ds/maclaren.3DS";
     while (!glfwWindowShouldClose(window)) {
         ImGui_ImplOpenGL3_NewFrame();
@@ -416,6 +429,18 @@ int main() {
         ImGui::NewFrame();
 
         ImGuizmo::BeginFrame();
+
+        if (defaultShader.shaderProgram == -1) {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glClearColor(0.5, 0.2, 0.3, 1);
+            ImGui::Text("Could not find shaders: ./shaders/*.{frag,vert}");
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+            continue;
+        }
 
         ImGui::Begin("Controls");
         ImGui::InputText("Text Area", text, IM_ARRAYSIZE(text));
